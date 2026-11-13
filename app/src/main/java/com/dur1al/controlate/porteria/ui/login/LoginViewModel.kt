@@ -7,6 +7,7 @@ import com.dur1al.controlate.porteria.data.local.security.AdminPinManager
 import com.dur1al.controlate.porteria.data.local.security.AdminPinManager.VerifyResult
 import com.dur1al.controlate.porteria.domain.model.ControlPoint
 import com.dur1al.controlate.porteria.domain.model.ShiftType
+import com.dur1al.controlate.porteria.domain.repository.ControlPointRepository
 import com.dur1al.controlate.porteria.domain.usecase.GetActiveShiftUseCase
 import com.dur1al.controlate.porteria.domain.usecase.StartShiftUseCase
 import com.dur1al.controlate.porteria.ui.common.EventChannel
@@ -30,21 +31,24 @@ class LoginViewModel(
     private val getActiveShift: GetActiveShiftUseCase,
     private val startShift: StartShiftUseCase,
     private val pins: AdminPinManager,
+    private val controlPoints: ControlPointRepository,
     private val cpuDispatcher: CoroutineDispatcher = Dispatchers.Default
 ) : ViewModel() {
 
     data class UiState(
         val checkingSession: Boolean = true,
         val kind: ControlPoint.Kind = ControlPoint.Kind.PORTERIA,
-        val points: List<ControlPoint> = ControlPoint.ofKind(ControlPoint.Kind.PORTERIA),
-        val selectedPoint: ControlPoint = points.first(),
+        /** Puntos activos del tipo elegido, en el orden definido por el administrador. */
+        val points: List<ControlPoint> = emptyList(),
+        /** `null` si el tipo elegido no tiene puntos activos. */
+        val selectedPoint: ControlPoint? = null,
         val shiftType: ShiftType = ShiftType.DAY,
         val guardNameError: Boolean = false,
         val busy: Boolean = false
     )
 
     sealed interface Event {
-        data class OpenShift(val point: ControlPoint) : Event
+        data class OpenShift(val kind: ControlPoint.Kind) : Event
         data object OpenAdmin : Event
         data object AskPin : Event
         data object AskPinSetup : Event
@@ -57,20 +61,36 @@ class LoginViewModel(
     private val eventChannel = EventChannel<Event>()
     val events: Flow<Event> = eventChannel.events
 
+    /** Puntos activos de ambos tipos; se observa para reflejar cambios hechos en administración. */
+    private var activePoints: List<ControlPoint> = emptyList()
+
     init {
         viewModelScope.launch {
             val active = getActiveShift()
             if (active != null) {
-                eventChannel.send(Event.OpenShift(ControlPoint.fromId(active.controlPoint) ?: ControlPoint.PORTERIA_2))
+                val kind = controlPoints.get(active.controlPoint)?.kind
+                    ?: ControlPoint.Kind.fromId(active.controlPoint)
+                    ?: ControlPoint.Kind.PORTERIA
+                eventChannel.send(Event.OpenShift(kind))
             } else {
                 _state.update { it.copy(checkingSession = false) }
             }
         }
+        viewModelScope.launch {
+            controlPoints.observeAll().collect { all ->
+                activePoints = all.filter { it.active }
+                _state.update { it.withPointsOf(it.kind) }
+            }
+        }
     }
 
-    fun selectKind(kind: ControlPoint.Kind) {
-        val points = ControlPoint.ofKind(kind)
-        _state.update { it.copy(kind = kind, points = points, selectedPoint = points.first()) }
+    fun selectKind(kind: ControlPoint.Kind) = _state.update { it.withPointsOf(kind) }
+
+    /** Recalcula la lista del tipo y conserva la selección si sigue disponible. */
+    private fun UiState.withPointsOf(kind: ControlPoint.Kind): UiState {
+        val points = activePoints.filter { it.kind == kind }
+        val keep = selectedPoint?.takeIf { s -> s.kind == kind && points.any { it.id == s.id } }
+        return copy(kind = kind, points = points, selectedPoint = keep?.let { s -> points.first { it.id == s.id } } ?: points.firstOrNull())
     }
 
     fun selectPoint(point: ControlPoint) = _state.update { it.copy(selectedPoint = point) }
@@ -82,11 +102,12 @@ class LoginViewModel(
     fun startShift(guardName: String) {
         val current = _state.value
         if (current.busy) return
+        val point = current.selectedPoint ?: return eventChannel.send(Event.Message(UiMessage(R.string.login_no_active_points)))
         viewModelScope.launch {
             _state.update { it.copy(busy = true) }
-            when (startShift(guardName, current.selectedPoint, current.shiftType)) {
+            when (startShift(guardName, point, current.shiftType)) {
                 is StartShiftUseCase.Outcome.Started ->
-                    eventChannel.send(Event.OpenShift(current.selectedPoint))
+                    eventChannel.send(Event.OpenShift(point.kind))
                 StartShiftUseCase.Outcome.InvalidGuardName ->
                     _state.update { it.copy(guardNameError = true) }
             }

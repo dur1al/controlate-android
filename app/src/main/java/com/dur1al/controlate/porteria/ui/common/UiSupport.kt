@@ -3,6 +3,7 @@ package com.dur1al.controlate.porteria.ui.common
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.widget.EditText
 import androidx.annotation.StringRes
 import androidx.core.content.FileProvider
@@ -62,9 +63,20 @@ fun Context.shareReport(file: File): Boolean {
     }
 }
 
+/**
+ * Abre [url] en la app que la maneje (normalmente el navegador).
+ * @return `false` si no hay ninguna app capaz de abrirla.
+ */
+fun Context.openUrl(url: String): Boolean = try {
+    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).addCategory(Intent.CATEGORY_BROWSABLE))
+    true
+} catch (_: ActivityNotFoundException) {
+    false
+}
+
 /** Aplica formato de RUT mientras se escribe (`12.345.678-5`). */
-fun EditText.applyRutFormatter(maxLength: Int = 9) {
-    addTextChangedListener(RutTextWatcher(this, maxLength))
+fun EditText.applyRutFormatter() {
+    addTextChangedListener(RutTextWatcher(this))
 }
 
 fun EditText.textTrimmed(): String = text?.toString().orEmpty().trim()

@@ -74,6 +74,35 @@ class EntryUseCasesTest {
     }
 
     @Test
+    fun `plate already inside the shift is rejected until it exits`() = runTest {
+        val first = registerVehicle(shiftId = 7, input = vehicleInput()) as RegisterEntryOutcome.Saved
+
+        assertEquals(
+            RegisterEntryOutcome.Invalid(listOf(ValidationError(ValidationError.Field.PATENTE, ValidationError.Reason.ALREADY_INSIDE))),
+            registerVehicle(shiftId = 7, input = vehicleInput(patente = "DEMO-01"))
+        )
+        // Otro turno no se ve afectado.
+        assertTrue(registerVehicle(shiftId = 8, input = vehicleInput()) is RegisterEntryOutcome.Saved)
+
+        markExit.vehicle(first.id)
+        assertTrue(registerVehicle(shiftId = 7, input = vehicleInput()) is RegisterEntryOutcome.Saved)
+    }
+
+    @Test
+    fun `rut with a bike inside the shift is rejected until it exits`() = runTest {
+        val input = BikeEntryInput("11.111.111-1", "Ana", "Ing", PersonaType.ESTUDIANTE, null)
+        val first = registerBike(shiftId = 3, input = input) as RegisterEntryOutcome.Saved
+
+        assertEquals(
+            RegisterEntryOutcome.Invalid(listOf(ValidationError(ValidationError.Field.RUT, ValidationError.Reason.ALREADY_INSIDE))),
+            registerBike(shiftId = 3, input = input.copy(rut = "111111111"))
+        )
+
+        markExit.bike(first.id)
+        assertTrue(registerBike(shiftId = 3, input = input) is RegisterEntryOutcome.Saved)
+    }
+
+    @Test
     fun `new person is added to the directory`() = runTest {
         registerVehicle(shiftId = 7, input = vehicleInput(patente = "NEW123", rut = "12.345.678-5", nombre = "Luis Soto"))
 

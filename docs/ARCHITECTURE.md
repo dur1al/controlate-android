@@ -47,7 +47,7 @@ flowchart TB
 
 - `dataModule`: base de datos, DAOs, repositorios (`bind` a su interfaz), `AdminPinManager`, `ReportStore`, `ReportExporter`, `ReportLabels`, `Clock`.
 - `domainModule`: casos de uso como `factory` (sin estado).
-- `presentationModule`: ViewModels. `ExamenViewModel` recibe el nombre del guardia por `parametersOf`.
+- `presentationModule`: ViewModels.
 
 `KoinGraphTest` resuelve todos los ViewModels con Robolectric para detectar errores de cableado en CI.
 
@@ -110,10 +110,10 @@ sequenceDiagram
 
 - **Fuente única de verdad:** SQLite (Room). La sesión en `SharedPreferences` guarda solo el **id** del turno abierto; los datos del turno viven en la tabla `turnos`.
 - **Tiempo:** `entradaAt`, `salidaAt`, `iniciadoAt` y `finalizadoAt` son epoch millis. `TimeFormat` (java.time) los formatea en la zona del dispositivo. Las estadísticas diarias usan el rango `[00:00, 24:00)` local.
-- **Códigos estables:** `tipoPersona` (`PersonaType.name`), `tipo` de turno (`ShiftType.name`) y `controlPoint` (`ControlPoint.id`). Las etiquetas visibles salen de `strings.xml`.
-- **Integridad:** FK `shiftId → turnos.id` con `ON DELETE CASCADE`; índice único en `personas.patente` y en `examen_preguntas.pregunta`; índices en `shiftId`, `entradaAt`, `rut` y `patente`.
+- **Códigos estables:** `tipoPersona` (`PersonaType.name`), `tipo` de turno (`ShiftType.name`) y `controlPoint` (`ControlPoint.id`). Las etiquetas visibles salen de `strings.xml`, salvo el nombre del punto de control, que es un dato editable en `puntos_control`.
+- **Integridad:** FK `shiftId → turnos.id` con `ON DELETE CASCADE`; índice único en `personas.patente`; índices en `shiftId`, `entradaAt`, `rut` y `patente`.
 - **Búsqueda:** `instr(upper(col), upper(:q))` en lugar de `LIKE`, para que `%` y `_` del usuario no sean comodines.
-- **Carga semilla:** `DatabaseSeeder` corre una sola vez por arranque, en serie: el directorio demo solo en instalaciones nuevas y el banco OS-10 cuando la tabla está vacía, con inserción idempotente.
+- **Carga semilla:** `DatabaseSeeder` corre una sola vez por arranque y carga el directorio demo solo en instalaciones nuevas.
 
 ### Migraciones
 
@@ -121,8 +121,10 @@ sequenceDiagram
 | :--- | :--- |
 | 12 → 17 | Columnas incrementales del bicicletero y tablas del examen (heredadas). |
 | 17 → 18 | Crea `turnos` desde los datos repetidos en cada registro. Convierte fecha y hora de texto a epoch millis (si la salida tiene hora menor a la entrada, cuenta como del día siguiente). Normaliza RUT y `tipoPersona`, unifica el formato de fecha del bicicletero, elimina preguntas duplicadas y recupera el turno abierto que versiones anteriores guardaban solo en preferencias (`LegacyActiveShift`). |
+| 18 → 19 | Se retira el simulador OS-10: elimina `examen_preguntas` y `examen_resultados`. No toca datos operativos. |
+| 19 → 20 | Crea `puntos_control` e inserta los puntos de fábrica (`INSERT OR IGNORE`, parametrizado). Las instalaciones nuevas los reciben en el `onCreate` de Room. |
 
-`Migration17To18Test` crea una base v17 real con `MigrationTestHelper`, la migra y valida el esquema contra `app/schemas/…/18.json`.
+`Migration17To18Test` crea una base v17 real con `MigrationTestHelper`, la migra y valida el esquema contra `app/schemas/…/18.json`; `Migration18To19Test` hace lo mismo de v18 a v19.
 
 ---
 
@@ -154,7 +156,7 @@ sequenceDiagram
 
 ### ADR-006 — Estado de UI con StateFlow y eventos por Channel
 - **Decisión:** `StateFlow<UiState>` para el estado y `Channel` (`EventChannel`) para efectos únicos. Se elimina LiveData.
-- **Consecuencias:** ViewModels testeables con `kotlinx-coroutines-test` (incluido tiempo virtual para el temporizador del examen) y sin eventos repetidos tras rotaciones.
+- **Consecuencias:** ViewModels testeables con `kotlinx-coroutines-test` y sin eventos repetidos tras rotaciones.
 
 ### ADR-007 — Reportes PDF nativos, contenido en el dominio
 - **Decisión:** `BuildReportUseCase` produce un `ReportDocument` (columnas, filas y metadatos) y `PdfReportWriter` lo dibuja con `android.graphics.pdf` en `Dispatchers.IO`. Los PDF se guardan en `files/reports` y se comparten vía `FileProvider`.

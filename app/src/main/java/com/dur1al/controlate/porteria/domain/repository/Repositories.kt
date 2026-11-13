@@ -1,11 +1,10 @@
 package com.dur1al.controlate.porteria.domain.repository
 
-import com.dur1al.controlate.porteria.data.local.entities.ExamenPregunta
-import com.dur1al.controlate.porteria.data.local.entities.ExamenResultado
 import com.dur1al.controlate.porteria.data.local.entities.Persona
 import com.dur1al.controlate.porteria.data.local.entities.RegistroBicicleta
 import com.dur1al.controlate.porteria.data.local.entities.RegistroIngreso
 import com.dur1al.controlate.porteria.data.local.entities.Turno
+import com.dur1al.controlate.porteria.domain.model.ControlPoint
 import com.dur1al.controlate.porteria.domain.model.PointCount
 import com.dur1al.controlate.porteria.domain.model.ShiftSummary
 import kotlinx.coroutines.flow.Flow
@@ -39,6 +38,8 @@ interface VehicleEntryRepository {
     suspend fun insert(registro: RegistroIngreso): Long
     suspend fun getByShift(shiftId: Long): List<RegistroIngreso>
     suspend fun getBetween(from: Long, to: Long): List<RegistroIngreso>
+    /** `true` si [patente] (normalizada) tiene un ingreso sin salida en el turno. */
+    suspend fun isInside(shiftId: Long, patente: String): Boolean
     /** @return `true` si se marcó; `false` si ya tenía salida o no existe. */
     suspend fun markExit(id: Long, at: Long): Boolean
     suspend fun undoExit(id: Long, at: Long): Boolean
@@ -51,9 +52,20 @@ interface BikeEntryRepository {
     suspend fun getByShift(shiftId: Long): List<RegistroBicicleta>
     suspend fun getBetween(from: Long, to: Long): List<RegistroBicicleta>
     suspend fun latestByRut(rut: String): RegistroBicicleta?
+    /** `true` si [rut] (normalizado) tiene una bicicleta sin salida en el turno. */
+    suspend fun isInside(shiftId: Long, rut: String): Boolean
     suspend fun markExit(id: Long, at: Long): Boolean
     suspend fun undoExit(id: Long, at: Long): Boolean
     suspend fun deleteAll()
+}
+
+/** Puntos de control configurables (porterías y bicicleteros), activos e inactivos. */
+interface ControlPointRepository {
+    fun observeAll(): Flow<List<ControlPoint>>
+    suspend fun getAll(): List<ControlPoint>
+    suspend fun get(id: String): ControlPoint?
+    suspend fun insert(point: ControlPoint)
+    suspend fun update(point: ControlPoint)
 }
 
 interface PersonaRepository {
@@ -65,9 +77,4 @@ interface PersonaRepository {
     suspend fun upsertAll(personas: List<Persona>)
     suspend fun update(persona: Persona)
     suspend fun delete(persona: Persona)
-}
-
-interface ExamRepository {
-    suspend fun randomQuestions(limit: Int): List<ExamenPregunta>
-    suspend fun saveResult(resultado: ExamenResultado): Long
 }

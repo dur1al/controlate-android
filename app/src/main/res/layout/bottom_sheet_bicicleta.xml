@@ -29,6 +29,20 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
+            <!-- Aviso en línea (autocompletado o error al guardar): no tapa botones como un snackbar
+                 y TalkBack lo anuncia por ser región viva. -->
+            <TextView
+                android:id="@+id/tvFormStatus"
+                style="@style/Controlate.Text.Body"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:accessibilityLiveRegion="polite"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvTitle" />
+
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/tilRutBici"
                 style="@style/Controlate.OutlinedInput"
@@ -38,14 +52,15 @@
                 android:hint="@string/rut_hint"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tvTitle">
+                app:layout_constraintTop_toBottomOf="@id/tvFormStatus">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etRutBici"
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/button_height"
                     android:imeOptions="actionNext"
-                    android:inputType="textCapCharacters"
+                    android:digits="@string/rut_allowed_chars"
+                    android:inputType="textCapCharacters|textNoSuggestions"
                     android:singleLine="true"
                     android:textColor="@color/text_main" />
             </com.google.android.material.textfield.TextInputLayout>
@@ -153,11 +168,10 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnGuardarBici"
-                style="@style/Controlate.Button.Primary"
+                style="@style/Controlate.Button.Primary.Bike"
                 android:layout_width="0dp"
                 android:layout_height="@dimen/button_height"
                 android:layout_marginTop="20dp"
-                android:backgroundTint="@color/bicicletero2_primary"
                 android:text="@string/register_button"
                 android:textSize="16sp"
                 app:layout_constraintBottom_toBottomOf="parent"

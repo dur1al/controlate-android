@@ -72,7 +72,9 @@
 
     <style name="Controlate.Button.Primary" parent="Widget.Material3.Button">
         <item name="android:fontFamily">@font/nunito</item>
-        <item name="android:textColor">@color/white</item>
+        <item name="backgroundTint">@color/btn_bg_primary</item>
+        <item name="android:textColor">@color/btn_content_on_action</item>
+        <item name="iconTint">@color/btn_content_on_action</item>
         <item name="android:textStyle">bold</item>
         <item name="cornerRadius">16dp</item>
         <item name="android:minHeight">56dp</item>
@@ -80,9 +82,16 @@
 
     <style name="Controlate.Button.Pill" parent="Widget.Material3.Button">
         <item name="android:fontFamily">@font/nunito</item>
-        <item name="android:textColor">@color/white</item>
+        <item name="backgroundTint">@color/btn_bg_primary</item>
+        <item name="android:textColor">@color/btn_content_on_action</item>
+        <item name="iconTint">@color/btn_content_on_action</item>
         <item name="android:textStyle">bold</item>
         <item name="cornerRadius">28dp</item>
+    </style>
+
+    <!-- Variantes de color del botón primario: mismo contraste y estado deshabilitado. -->
+    <style name="Controlate.Button.Primary.Bike">
+        <item name="backgroundTint">@color/btn_bg_bike</item>
     </style>
 
     <style name="Controlate.Toolbar.Title" parent="TextAppearance.Material3.TitleLarge">

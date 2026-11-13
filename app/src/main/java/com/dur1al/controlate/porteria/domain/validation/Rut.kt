@@ -9,8 +9,17 @@ package com.dur1al.controlate.porteria.domain.validation
  */
 object Rut {
 
-    private const val MIN_LENGTH = 7
-    private const val MAX_LENGTH = 9
+    private const val MIN_BODY_DIGITS = 6
+    private const val MAX_BODY_DIGITS = 8
+
+    /** Largo máximo de la forma canónica (cuerpo + DV). */
+    const val MAX_LENGTH = MAX_BODY_DIGITS + 1
+
+    /**
+     * Formatos aceptados al escribir: `12345678-5`, `123456785` o `12.345.678-5`
+     * (puntos solo cada 3 dígitos y en todo el cuerpo). La `K` solo puede ser el DV.
+     */
+    private val ACCEPTED_FORMAT = Regex("^(\\d{1,3}(\\.\\d{3})+|\\d+)-?[\\dK]$")
 
     /** Devuelve la forma canónica: solo dígitos y, si existe, una `K` final como dígito verificador. */
     fun normalize(raw: String): String {
@@ -24,12 +33,18 @@ object Rut {
     fun normalizeOrNull(raw: String?): String? =
         raw?.let(::normalize)?.takeIf { it.isNotEmpty() }
 
-    /** Valida largo y dígito verificador (módulo 11). Nunca lanza excepción. */
+    /**
+     * Valida formato, largo y dígito verificador (módulo 11). Nunca lanza excepción.
+     *
+     * Es estricto con lo que escribe la persona: rechaza letras en el cuerpo, puntos mal
+     * ubicados o cuerpos que empiezan en 0, en vez de "limpiarlos" y validar otro RUT.
+     */
     fun isValid(raw: String): Boolean {
-        val clean = normalize(raw)
-        if (clean.length !in MIN_LENGTH..MAX_LENGTH) return false
+        val trimmed = raw.trim().uppercase()
+        if (!ACCEPTED_FORMAT.matches(trimmed)) return false
+        val clean = normalize(trimmed)
         val body = clean.dropLast(1)
-        if (body.any { !it.isDigit() }) return false
+        if (body.length !in MIN_BODY_DIGITS..MAX_BODY_DIGITS || body.first() == '0') return false
         return computeCheckDigit(body) == clean.last()
     }
 
@@ -42,7 +57,9 @@ object Rut {
         return "$grouped-${clean.last()}"
     }
 
-    private fun computeCheckDigit(body: String): Char {
+    /** Dígito verificador para un cuerpo numérico (útil para generar datos de prueba sintéticos). */
+    fun computeCheckDigit(body: String): Char {
+        require(body.isNotEmpty() && body.all { it.isDigit() }) { "El cuerpo del RUT debe ser numérico" }
         var sum = 0
         var factor = 2
         for (digit in body.reversed()) {

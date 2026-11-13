@@ -40,6 +40,7 @@ class ShiftReportActivity : AppCompatActivity() {
         setUpToolbar()
 
         collectWhenStarted(viewModel.state) { state ->
+            adapter.points = state.points
             adapter.submitList(state.shifts)
             binding.tvEmpty.isVisible = !state.loading && state.shifts.isEmpty()
             val base = getString(R.string.reports_subtitle)

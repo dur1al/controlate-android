@@ -58,7 +58,11 @@ class AdminViewModel(
     fun refresh() {
         viewModelScope.launch {
             val points = getDailyStats()
-            _state.update { it.copy(loading = false, points = points, totals = totalsFor(points, it.scope)) }
+            _state.update { current ->
+                // Si el punto filtrado ya no aparece (p. ej. se desactivó), se vuelve a la vista general.
+                val scope = current.scope?.let { s -> points.firstOrNull { it.controlPoint.id == s.id }?.controlPoint }
+                current.copy(loading = false, points = points, scope = scope, totals = totalsFor(points, scope))
+            }
         }
     }
 
@@ -85,8 +89,9 @@ class AdminViewModel(
         }
     }
 
+    /** El filtro se compara por id: un renombre no debe dejar el filtro apuntando a nada. */
     private fun totalsFor(points: List<PointStat>, scope: ControlPoint?): Totals {
-        val selected = if (scope == null) points else points.filter { it.controlPoint == scope }
+        val selected = if (scope == null) points else points.filter { it.controlPoint.id == scope.id }
         return Totals(selected.sumOf { it.entradas }, selected.sumOf { it.salidas }, selected.sumOf { it.dentro })
     }
 }

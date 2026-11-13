@@ -35,6 +35,7 @@
             android:layout_marginBottom="12dp">
 
             <TextView
+                android:id="@+id/tvHeaderTitle"
                 style="@style/Controlate.Text.Heading"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -144,11 +145,9 @@
                 style="@style/Controlate.Button.Pill"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/button_height"
-                android:backgroundTint="@color/bicicletero2_primary"
+                android:backgroundTint="@color/btn_bg_bike"
                 android:text="@string/new_entry_short"
-                android:textColor="@color/white"
                 app:icon="@drawable/ic_add"
-                app:iconTint="@color/white"
                 app:cornerRadius="28dp" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>

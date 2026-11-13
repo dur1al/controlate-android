@@ -3,6 +3,32 @@
 Todos los cambios relevantes de este proyecto se documentan en este archivo.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa [Versionado Semántico](https://semver.org/lang/es/).
 
+## [Unreleased]
+
+### Added
+- **Puntos de control administrables** (Panel admin › Puntos de control): agregar porterías y bicicleteros, renombrarlos y activarlos o desactivarlos. Se guardan en la tabla `puntos_control` (migración 19 → 20) con los puntos de fábrica precargados. Un punto nunca se borra: desactivarlo conserva sus turnos y reportes, y siempre queda al menos uno activo por tipo.
+- Validación al salir de cada campo (patente, nombre, RUT, carrera) con las mismas reglas que al guardar.
+- Batería de pruebas QA de validaciones: matriz de formatos de RUT, formateo tecla a tecla (también sobre un `EditText` real), nombre, patente, carrera, padrón, CSV y edición del directorio.
+
+### Removed
+- Simulador de examen OS-10: botón de inicio, pantallas, casos de uso, banco de preguntas y tablas (`examen_preguntas`, `examen_resultados`, migración 18 → 19).
+
+### Changed
+- Puntos de control vehiculares visibles como **Portería 1, 2 y 3**. Los ids persistidos (`porteria_2..4`) no cambian, para no dejar huérfanos los turnos y reportes existentes.
+- Contacto en "Información": `github.com/dur1al`, con botón para abrir el perfil.
+- Botones con contraste WCAG AA (texto ≥ 4.5:1) y estado deshabilitado distinguible; con colores dinámicos por punto, el texto y los iconos se eligen por contraste.
+- El aviso de autocompletado y los errores al guardar se muestran en línea dentro del formulario, sin snackbars que tapen el botón "Registrar". Los snackbars de las pantallas principales se anclan sobre la barra inferior.
+- Los formularios de ingreso se abren expandidos, llevan el foco al primer campo con error y limpian solo el error del campo corregido.
+
+### Fixed
+- Formateo del RUT al escribir: el cursor quedaba antes del último dígito y desordenaba lo escrito (`1,2,3,4` → `124-3`); borrar un punto o el guion no tenía efecto.
+- Validación del RUT estricta: rechaza una `K` en el cuerpo, puntos mal ubicados y cuerpos que empiezan en 0 (antes se "limpiaban" y se validaba otro RUT). El campo solo admite dígitos, `K`, punto y guion.
+- La edición del directorio no validaba RUT ni nombre y cerraba el diálogo aunque hubiera errores; ahora los muestra en cada campo y mantiene lo escrito.
+- Nombres: obligan al menos una letra y rechazan dígitos y símbolos (máximo 60 caracteres).
+- Doble toque en "Registrar" podía duplicar un ingreso: el botón se deshabilita mientras se guarda.
+- Se rechaza el ingreso de una patente (o de un RUT en el bicicletero) que ya está dentro en el turno.
+- Un fallo al guardar un ingreso cerraba la app; ahora se informa en el formulario.
+
 ## [1.1.0] - Sin publicar
 
 ### Added

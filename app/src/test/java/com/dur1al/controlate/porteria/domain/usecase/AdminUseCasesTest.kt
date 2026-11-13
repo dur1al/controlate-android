@@ -10,10 +10,12 @@ import com.dur1al.controlate.porteria.domain.model.PointStat
 import com.dur1al.controlate.porteria.domain.time.TimeFormat
 import com.dur1al.controlate.porteria.testing.FakeBikeEntryRepository
 import com.dur1al.controlate.porteria.testing.FakeClock
+import com.dur1al.controlate.porteria.testing.FakeControlPointRepository
 import com.dur1al.controlate.porteria.testing.FakePersonaRepository
 import com.dur1al.controlate.porteria.testing.FakeSessionStore
 import com.dur1al.controlate.porteria.testing.FakeShiftRepository
 import com.dur1al.controlate.porteria.testing.FakeVehicleEntryRepository
+import com.dur1al.controlate.porteria.testing.Points
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -35,16 +37,16 @@ class AdminUseCasesTest {
     fun `daily stats cover every control point for the local day`() = runTest {
         shifts.pointCounts = listOf(PointCount("porteria_3", 5, 2), PointCount("BICICLETERO_2", 4, 4), PointCount("legacy", 9, 9))
 
-        val stats = GetDailyStatsUseCase(shifts, clock, zone)()
+        val stats = GetDailyStatsUseCase(shifts, FakeControlPointRepository(), clock, zone)()
 
         assertEquals(TimeFormat.dayRange(LocalDate.of(2026, 6, 14), zone), shifts.lastCountRange)
         assertEquals(
             listOf(
-                PointStat(ControlPoint.PORTERIA_2, 0, 0),
-                PointStat(ControlPoint.PORTERIA_3, 5, 2),
-                PointStat(ControlPoint.PORTERIA_4, 0, 0),
-                PointStat(ControlPoint.BICICLETERO_1, 0, 0),
-                PointStat(ControlPoint.BICICLETERO_2, 4, 4)
+                PointStat(Points.PORTERIA_1, 0, 0),
+                PointStat(Points.PORTERIA_2, 5, 2),
+                PointStat(Points.PORTERIA_3, 0, 0),
+                PointStat(Points.BICICLETERO_1, 0, 0),
+                PointStat(Points.BICICLETERO_2, 4, 4)
             ),
             stats
         )
@@ -78,5 +80,22 @@ class AdminUseCasesTest {
         val ok = import("DEMO01,Ana\nDEMO02,Luis")
         assertEquals(2, ok.personas.size)
         assertEquals(listOf("DEMO01", "DEMO02"), personas.rows.value.map { it.patente })
+    }
+
+    @Test
+    fun `inactive points only appear when they had movement and new points appear with zeros`() = runTest {
+        val points = FakeControlPointRepository()
+        points.update(Points.PORTERIA_1.copy(active = false))
+        points.update(Points.PORTERIA_2.copy(active = false))
+        points.insert(ControlPoint("porteria_5", "Portería 4", ControlPoint.Kind.PORTERIA, 3))
+        shifts.pointCounts = listOf(PointCount("porteria_3", 1, 0))
+
+        val stats = GetDailyStatsUseCase(shifts, points, clock, zone)()
+
+        assertEquals(
+            listOf("porteria_3", "porteria_4", "porteria_5", "bicicletero_1", "bicicletero_2"),
+            stats.map { it.controlPoint.id }
+        )
+        assertEquals(1, stats.first().entradas)
     }
 }

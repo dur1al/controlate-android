@@ -4,12 +4,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dur1al.controlate.R
 import com.dur1al.controlate.porteria.data.report.ReportStore
+import com.dur1al.controlate.porteria.domain.model.ControlPoint
 import com.dur1al.controlate.porteria.domain.model.ShiftSummary
+import com.dur1al.controlate.porteria.domain.repository.ControlPointRepository
 import com.dur1al.controlate.porteria.domain.report.ReportExporter
 import com.dur1al.controlate.porteria.domain.repository.ShiftRepository
 import com.dur1al.controlate.porteria.domain.usecase.BuildReportUseCase
 import com.dur1al.controlate.porteria.ui.common.EventChannel
 import com.dur1al.controlate.porteria.ui.common.UiMessage
+import com.dur1al.controlate.porteria.ui.common.byId
 import com.dur1al.controlate.porteria.ui.common.runCatchingCancellable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,14 +28,17 @@ class ShiftReportsViewModel(
     private val shifts: ShiftRepository,
     private val buildReport: BuildReportUseCase,
     private val exporter: ReportExporter,
-    private val store: ReportStore
+    private val store: ReportStore,
+    private val controlPoints: ControlPointRepository
 ) : ViewModel() {
 
     data class UiState(
         val loading: Boolean = true,
         /** Fecha ISO (`yyyy-MM-dd`) del filtro activo, o `null`. */
         val dateFilter: String? = null,
-        val shifts: List<ShiftSummary> = emptyList()
+        val shifts: List<ShiftSummary> = emptyList(),
+        /** Puntos por id en minúscula, para mostrar el nombre actual de cada turno. */
+        val points: Map<String, ControlPoint> = emptyMap()
     )
 
     sealed interface Event {
@@ -51,10 +57,10 @@ class ShiftReportsViewModel(
 
     init {
         viewModelScope.launch {
-            combine(shifts.observeSummaries(), dateFilter) { all, date ->
-                date to (if (date == null) all else all.filter { it.fecha == date })
-            }.collect { (date, list) ->
-                _state.update { it.copy(loading = false, dateFilter = date, shifts = list) }
+            combine(shifts.observeSummaries(), dateFilter, controlPoints.observeAll()) { all, date, points ->
+                Triple(date, if (date == null) all else all.filter { it.fecha == date }, points.byId())
+            }.collect { (date, list, points) ->
+                _state.update { it.copy(loading = false, dateFilter = date, shifts = list, points = points) }
             }
         }
     }

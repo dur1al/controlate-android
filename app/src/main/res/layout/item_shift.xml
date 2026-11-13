@@ -94,7 +94,7 @@
             style="@style/Widget.Material3.Button.IconButton.Filled.Tonal"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:backgroundTint="@color/success_green"
+            android:backgroundTint="@color/btn_bg_success"
             android:contentDescription="@string/btn_export"
             app:icon="@drawable/ic_save"
             app:iconTint="@color/white"

@@ -29,5 +29,13 @@ data class BikeEntryInput(
  */
 data class ValidationError(val field: Field, val reason: Reason) {
     enum class Field { PATENTE, NOMBRE, RUT, PADRON, CARRERA }
-    enum class Reason { REQUIRED, TOO_SHORT, INVALID_FORMAT }
+    enum class Reason {
+        REQUIRED, TOO_SHORT, TOO_LONG, INVALID_FORMAT,
+
+        /** Ya hay un ingreso sin salida con ese dato en el turno. */
+        ALREADY_INSIDE,
+
+        /** Otro registro del directorio ya usa ese dato. */
+        DUPLICATE
+    }
 }

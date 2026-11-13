@@ -35,6 +35,10 @@ interface RegistroDao {
     @Query("SELECT * FROM registros_ingreso WHERE entradaAt BETWEEN :from AND :to ORDER BY entradaAt ASC, id ASC")
     suspend fun getBetween(from: Long, to: Long): List<RegistroIngreso>
 
+    /** ¿La patente ya tiene un ingreso sin salida en este turno? (evita ingresos duplicados). */
+    @Query("SELECT EXISTS(SELECT 1 FROM registros_ingreso WHERE shiftId = :shiftId AND patente = :patente AND salidaAt IS NULL)")
+    suspend fun isInside(shiftId: Long, patente: String): Boolean
+
     /** Marca la salida solo si no existía; devuelve filas afectadas (0 = ya tenía salida). */
     @Query("UPDATE registros_ingreso SET salidaAt = :at WHERE id = :id AND salidaAt IS NULL")
     suspend fun markExit(id: Long, at: Long): Int

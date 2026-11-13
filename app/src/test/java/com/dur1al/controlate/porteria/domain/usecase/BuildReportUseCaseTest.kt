@@ -12,9 +12,11 @@ import com.dur1al.controlate.porteria.domain.report.ReportDocument.MetaField
 import com.dur1al.controlate.porteria.domain.report.ReportLabels
 import com.dur1al.controlate.porteria.testing.FakeBikeEntryRepository
 import com.dur1al.controlate.porteria.testing.FakeClock
+import com.dur1al.controlate.porteria.testing.FakeControlPointRepository
 import com.dur1al.controlate.porteria.testing.FakePersonaRepository
 import com.dur1al.controlate.porteria.testing.FakeShiftRepository
 import com.dur1al.controlate.porteria.testing.FakeVehicleEntryRepository
+import com.dur1al.controlate.porteria.testing.Points
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -28,7 +30,7 @@ class BuildReportUseCaseTest {
     private fun at(d: Int, h: Int, m: Int) = LocalDateTime.of(2026, 6, d, h, m).atZone(zone).toInstant().toEpochMilli()
 
     private val labels = object : ReportLabels {
-        override fun controlPoint(id: String) = "Punto[$id]"
+        override fun unknownControlPoint(id: String) = "Punto[$id]"
         override fun personaType(code: String) = "Tipo[$code]"
         override fun shiftType(code: String) = "Turno[$code]"
     }
@@ -37,7 +39,8 @@ class BuildReportUseCaseTest {
     private val bikes = FakeBikeEntryRepository()
     private val shifts = FakeShiftRepository(vehicles, bikes)
     private val personas = FakePersonaRepository()
-    private val useCase = BuildReportUseCase(shifts, vehicles, bikes, personas, labels, clock, zone)
+    private val points = FakeControlPointRepository()
+    private val useCase = BuildReportUseCase(shifts, vehicles, bikes, personas, points, labels, clock, zone)
 
     @Test
     fun `vehicle shift report lists entries with formatted rut and times`() = runTest {
@@ -56,7 +59,7 @@ class BuildReportUseCaseTest {
         assertEquals(ReportDocument.Type.VEHICLE_SHIFT, doc.type)
         assertEquals(
             listOf(
-                ReportDocument.Meta(MetaField.POINT, "Punto[porteria_2]"),
+                ReportDocument.Meta(MetaField.POINT, "Portería 1"),
                 ReportDocument.Meta(MetaField.DATE, "14/06/2026"),
                 ReportDocument.Meta(MetaField.GUARD, "Guardia Noche"),
                 ReportDocument.Meta(MetaField.SHIFT_TYPE, "Turno[NIGHT]")
@@ -92,14 +95,14 @@ class BuildReportUseCaseTest {
     @Test
     fun `daily summary has one row per point and a total`() {
         val doc = useCase.dailySummary(
-            listOf(PointStat(ControlPoint.PORTERIA_2, 5, 3), PointStat(ControlPoint.BICICLETERO_1, 2, 2))
+            listOf(PointStat(Points.PORTERIA_1, 5, 3), PointStat(Points.BICICLETERO_1, 2, 2))
         )
         assertEquals(ReportDocument.Type.DAILY_SUMMARY, doc.type)
         assertEquals(listOf(Column.PUNTO, Column.ENTRARON, Column.SALIERON, Column.DENTRO), doc.columns)
         assertEquals(
             listOf(
-                listOf("Punto[porteria_2]", "5", "3", "2"),
-                listOf("Punto[bicicletero_1]", "2", "2", "0"),
+                listOf("Portería 1", "5", "3", "2"),
+                listOf("Punto Bicicleta 1", "2", "2", "0"),
                 listOf(ReportDocument.TOTAL_ROW_LABEL, "7", "5", "2")
             ),
             doc.rows
@@ -113,5 +116,33 @@ class BuildReportUseCaseTest {
         val doc = useCase.directory()
         assertEquals(listOf(Column.PATENTE, Column.NOMBRE, Column.DEPTO, Column.RUT, Column.TIPO), doc.columns)
         assertEquals(listOf("DEMO01", "Ana", "Adm", "11.111.111-1", "Tipo[VISITA]"), doc.rows.single())
+    }
+
+    @Test
+    fun `shift report uses the current name of a renamed point`() = runTest {
+        points.update(Points.PORTERIA_1.copy(name = "Acceso Norte"))
+        val shiftId = shifts.insert(Turno(guardia = "G", controlPoint = "porteria_2", tipo = "DAY", fecha = "2026-06-14", iniciadoAt = 1))
+
+        val doc = useCase.shift(shiftId)!!
+
+        assertEquals("Acceso Norte", doc.meta.first { it.field == MetaField.POINT }.value)
+    }
+
+    @Test
+    fun `a point created by the admin keeps its kind in the report`() = runTest {
+        points.insert(ControlPoint("bicicletero_3", "Bici Sur", ControlPoint.Kind.BICICLETERO, 2))
+        val shiftId = shifts.insert(Turno(guardia = "G", controlPoint = "bicicletero_3", tipo = "DAY", fecha = "2026-06-14", iniciadoAt = 1))
+
+        assertEquals(ReportDocument.Type.BIKE_SHIFT, useCase.shift(shiftId)!!.type)
+    }
+
+    @Test
+    fun `an unknown legacy point falls back to its id and kind prefix`() = runTest {
+        val shiftId = shifts.insert(Turno(guardia = "G", controlPoint = "bicicletero_9", tipo = "DAY", fecha = "2026-06-14", iniciadoAt = 1))
+
+        val doc = useCase.shift(shiftId)!!
+
+        assertEquals(ReportDocument.Type.BIKE_SHIFT, doc.type)
+        assertEquals("Punto[bicicletero_9]", doc.meta.first { it.field == MetaField.POINT }.value)
     }
 }

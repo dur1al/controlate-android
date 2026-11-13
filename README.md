@@ -6,7 +6,7 @@
 ![Architecture](https://img.shields.io/badge/Clean%20Architecture-MVVM-6C63FF)
 ![Tests](https://img.shields.io/badge/tests-JVM%20%2B%20Robolectric-success)
 
-Aplicación Android nativa **offline-first** para el control de accesos vehiculares y bicicleteros en porterías: registro de ingresos y salidas por turno, directorio con autocompletado, reportes PDF y un simulador del examen OS-10 para guardias de seguridad.
+Aplicación Android nativa **offline-first** para el control de accesos vehiculares y bicicleteros en porterías: registro de ingresos y salidas por turno, directorio con autocompletado y reportes PDF.
 
 Está pensada para un guardia en garita, con el teléfono en una mano, poca luz y fila de autos: pocas pantallas, una acción principal por pantalla, autocompletado desde el directorio y cero dependencia de la red.
 
@@ -35,7 +35,6 @@ Está pensada para un guardia en garita, con el teléfono en una mano, poca luz 
 | **Bicicletero** | Ingreso por RUT con autocompletado (último registro o directorio), búsqueda por RUT o nombre, salida con **Deshacer** y exportación PDF del turno. |
 | **Panel administrador** | Protegido por PIN. Muestra entradas, salidas y personas dentro del día por punto de control. Incluye resumen PDF, listado de turnos con filtro por fecha y exportación o borrado, y limpieza de datos operativos. |
 | **Directorio** | Búsqueda, edición y eliminación de personas, importación masiva CSV (todo o nada, con errores por línea) y exportación PDF. |
-| **Simulador OS-10** | 60 preguntas aleatorias de un banco local, 60 minutos y aprobación con 70 %. El resultado queda guardado. |
 
 Todo funciona sin conexión. Los reportes se comparten con el selector nativo de Android (`FileProvider`).
 
@@ -122,7 +121,7 @@ erDiagram
     TURNOS {
         long id PK
         string guardia
-        string controlPoint "porteria_2..bicicletero_2"
+        string controlPoint "porteria_2..bicicletero_2 (Portería 1 = porteria_2)"
         string tipo "DAY | NIGHT"
         string fecha "yyyy-MM-dd"
         long iniciadoAt
@@ -166,30 +165,9 @@ erDiagram
         string tipoPersona
         string padron
     }
-    EXAMEN_PREGUNTAS {
-        int id PK
-        string pregunta UK
-        string opcionA
-        string opcionB
-        string opcionC
-        string opcionD
-        int respuestaCorrecta
-        string categoria
-        string explicacion
-    }
-    EXAMEN_RESULTADOS {
-        long id PK
-        string guardiaNombre
-        long realizadoAt
-        int puntaje
-        int totalPreguntas
-        float porcentaje
-        boolean aprobado
-        long tiempoEmpleadoSegundos
-    }
 ```
 
-`personas` y las tablas de examen no tienen relación con los turnos: el directorio se vincula a los registros por valor (patente/RUT) solo para autocompletar. El esquema exportado vive en [`app/schemas/`](app/schemas/).
+`personas` no tiene relación con los turnos: el directorio se vincula a los registros por valor (patente/RUT) solo para autocompletar. El esquema exportado vive en [`app/schemas/`](app/schemas/).
 
 ---
 
@@ -231,10 +209,10 @@ Política completa y reporte de vulnerabilidades en [SECURITY.md](SECURITY.md).
 
 | Capa | Qué se prueba |
 | :--- | :--- |
-| Dominio | Validación de RUT y patente, parser CSV, casos de uso de turno, ingreso, salida, estadísticas, reportes y examen (con fakes y reloj controlado). |
+| Dominio | Validación de RUT y patente, parser CSV, casos de uso de turno, ingreso, salida, estadísticas y reportes (con fakes y reloj controlado). |
 | Datos | DAOs sobre SQLite real: agregados por punto, cascada de borrado, FK, búsqueda literal, salidas idempotentes, carga semilla idempotente. Migración 17→18 con datos heredados, incluido un turno nocturno que cruza medianoche. |
 | Seguridad | Hash de PIN, bloqueo por intentos, cambio de PIN. |
-| Presentación | ViewModels: estados, errores de formulario, deshacer salida, cierre de turno con y sin fallo del reporte, temporizador del examen con tiempo virtual. |
+| Presentación | ViewModels: estados, errores de formulario, deshacer salida, cierre de turno con y sin fallo del reporte. |
 | DI | Todo ViewModel se resuelve desde el grafo Koin. |
 
 GitHub Actions ejecuta tests, lint y build en cada push o PR a `main`, valida el Gradle wrapper y publica los reportes como artefacto. Dependabot propone actualizaciones semanales.
@@ -252,7 +230,7 @@ cd controlate-android
 ```
 
 1. Abre el proyecto en Android Studio y ejecútalo en un emulador o dispositivo.
-2. En la primera ejecución se cargan un directorio demo y el banco de preguntas OS-10, ambos sintéticos.
+2. En la primera ejecución se carga un directorio demo sintético.
 3. Inicia un turno con cualquier nombre. Para ver el panel, pulsa **Vista Admin** y define un PIN de 4 a 8 dígitos.
 
 ---
@@ -267,7 +245,7 @@ app/src/main/java/com/dur1al/controlate/
     ├── domain/
     │   ├── model/                 # ControlPoint, PersonaType, ShiftType, entradas, errores de validación
     │   ├── validation/            # Rut, Patente
-    │   ├── usecase/               # Turnos, ingresos, salidas, estadísticas, reportes, examen
+    │   ├── usecase/               # Turnos, ingresos, salidas, estadísticas, reportes
     │   ├── repository/            # Contratos de persistencia
     │   ├── report/                # ReportDocument, ReportExporter
     │   ├── importer/              # PersonaCsvParser
@@ -276,7 +254,7 @@ app/src/main/java/com/dur1al/controlate/
     │   ├── local/                 # Room (entities, dao, database, migraciones, seeder), sesión, seguridad
     │   ├── repository/            # Implementaciones Room
     │   └── report/                # PdfReportWriter, ReportStore
-    └── ui/                        # login, porteria, bicicletero, admin, db, settings, examen, common
+    └── ui/                        # login, porteria, bicicletero, admin, db, settings, common
 ```
 
 ---

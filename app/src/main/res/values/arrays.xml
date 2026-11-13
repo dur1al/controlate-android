@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Paletas de identidad de los puntos de control, indexadas por ControlPoint.order.
+         Los primeros colores corresponden a los puntos de fábrica. El texto encima se elige por contraste. -->
+    <array name="point_palette_porteria">
+        <item>@color/point_porteria_1</item>
+        <item>@color/point_porteria_2</item>
+        <item>@color/point_porteria_3</item>
+        <item>@color/point_porteria_extra_1</item>
+        <item>@color/point_porteria_extra_2</item>
+        <item>@color/point_porteria_extra_3</item>
+    </array>
+
+    <array name="point_palette_bicicletero">
+        <item>@color/point_bicicletero_1</item>
+        <item>@color/point_bicicletero_2</item>
+        <item>@color/point_bicicletero_extra_1</item>
+        <item>@color/point_bicicletero_extra_2</item>
+        <item>@color/point_bicicletero_extra_3</item>
+    </array>
+</resources>

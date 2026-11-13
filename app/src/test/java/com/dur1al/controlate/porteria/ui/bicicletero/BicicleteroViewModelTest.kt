@@ -1,9 +1,11 @@
 package com.dur1al.controlate.porteria.ui.bicicletero
 
+import com.dur1al.controlate.R
 import com.dur1al.controlate.porteria.domain.model.BikeEntryInput
 import com.dur1al.controlate.porteria.domain.model.ControlPoint
 import com.dur1al.controlate.porteria.domain.model.PersonaType
 import com.dur1al.controlate.porteria.domain.model.ShiftType
+import com.dur1al.controlate.porteria.domain.model.ValidationError
 import com.dur1al.controlate.porteria.domain.report.ReportExporter
 import com.dur1al.controlate.porteria.domain.report.ReportLabels
 import com.dur1al.controlate.porteria.domain.usecase.BuildReportUseCase
@@ -16,14 +18,18 @@ import com.dur1al.controlate.porteria.domain.usecase.StartShiftUseCase
 import com.dur1al.controlate.porteria.domain.usecase.ValidateRegistroUseCase
 import com.dur1al.controlate.porteria.testing.FakeBikeEntryRepository
 import com.dur1al.controlate.porteria.testing.FakeClock
+import com.dur1al.controlate.porteria.testing.FakeControlPointRepository
 import com.dur1al.controlate.porteria.testing.FakePersonaRepository
 import com.dur1al.controlate.porteria.testing.FakeSessionStore
 import com.dur1al.controlate.porteria.testing.FakeShiftRepository
 import com.dur1al.controlate.porteria.testing.FakeVehicleEntryRepository
 import com.dur1al.controlate.porteria.testing.MainDispatcherRule
+import com.dur1al.controlate.porteria.testing.Points
+import com.dur1al.controlate.porteria.ui.common.UiMessage
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Rule
 import org.junit.Test
@@ -42,13 +48,13 @@ class BicicleteroViewModelTest {
     private val personas = FakePersonaRepository()
     private val exported = mutableListOf<String>()
     private val labels = object : ReportLabels {
-        override fun controlPoint(id: String) = id
+        override fun unknownControlPoint(id: String) = id
         override fun personaType(code: String) = code
         override fun shiftType(code: String) = code
     }
 
     private suspend fun viewModel(): BicicleteroViewModel {
-        StartShiftUseCase(shifts, session, clock)("Guardia", ControlPoint.BICICLETERO_1, ShiftType.DAY)
+        StartShiftUseCase(shifts, session, clock)("Guardia", Points.BICICLETERO_1, ShiftType.DAY)
         return BicicleteroViewModel(
             getActiveShift = GetActiveShiftUseCase(shifts, session),
             registerEntry = RegisterBikeEntryUseCase(ValidateRegistroUseCase(), bikes, clock),
@@ -56,8 +62,10 @@ class BicicleteroViewModelTest {
             findPersona = FindPersonaUseCase(personas, bikes),
             entries = bikes,
             closeShift = EndShiftUseCase(shifts, session, clock),
-            buildReport = BuildReportUseCase(shifts, vehicles, bikes, personas, labels, clock),
-            exporter = ReportExporter { exported += it.fileStem; File(it.fileStem) }
+            buildReport = BuildReportUseCase(shifts, vehicles, bikes, personas, FakeControlPointRepository(), labels, clock),
+            exporter = ReportExporter { exported += it.fileStem; File(it.fileStem) },
+            validator = ValidateRegistroUseCase(),
+            controlPoints = FakeControlPointRepository()
         )
     }
 
@@ -79,6 +87,7 @@ class BicicleteroViewModelTest {
     fun `exit can be undone`() = runTest {
         val vm = viewModel()
         vm.register(input("11.111.111-1"))
+        assertEquals(BicicleteroViewModel.Event.Message(UiMessage(R.string.entry_registered)), vm.events.first())
         val registro = vm.state.value.registros.single()
 
         vm.markExit(registro)
@@ -86,6 +95,17 @@ class BicicleteroViewModelTest {
         vm.undoExit(event.id, event.at)
 
         assertNull(vm.state.value.registros.single().salidaAt)
+    }
+
+    @Test
+    fun `registering a rut with a bike inside shows a field error`() = runTest {
+        val vm = viewModel()
+        vm.register(input("11.111.111-1"))
+        vm.register(input("11.111.111-1"))
+
+        assertEquals(listOf(ValidationError(ValidationError.Field.RUT, ValidationError.Reason.ALREADY_INSIDE)), vm.formErrors.value)
+        assertEquals(1, vm.state.value.registros.size)
+        assertFalse(vm.formSaving.value)
     }
 
     @Test

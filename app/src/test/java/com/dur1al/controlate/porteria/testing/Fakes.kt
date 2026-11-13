@@ -1,15 +1,14 @@
 package com.dur1al.controlate.porteria.testing
 
-import com.dur1al.controlate.porteria.data.local.entities.ExamenPregunta
-import com.dur1al.controlate.porteria.data.local.entities.ExamenResultado
 import com.dur1al.controlate.porteria.data.local.entities.Persona
 import com.dur1al.controlate.porteria.data.local.entities.RegistroBicicleta
 import com.dur1al.controlate.porteria.data.local.entities.RegistroIngreso
 import com.dur1al.controlate.porteria.data.local.entities.Turno
+import com.dur1al.controlate.porteria.domain.model.ControlPoint
 import com.dur1al.controlate.porteria.domain.model.PointCount
 import com.dur1al.controlate.porteria.domain.model.ShiftSummary
 import com.dur1al.controlate.porteria.domain.repository.BikeEntryRepository
-import com.dur1al.controlate.porteria.domain.repository.ExamRepository
+import com.dur1al.controlate.porteria.domain.repository.ControlPointRepository
 import com.dur1al.controlate.porteria.domain.repository.PersonaRepository
 import com.dur1al.controlate.porteria.domain.repository.SessionStore
 import com.dur1al.controlate.porteria.domain.repository.ShiftRepository
@@ -87,6 +86,9 @@ class FakeVehicleEntryRepository : VehicleEntryRepository {
     val rows = MutableStateFlow<List<RegistroIngreso>>(emptyList())
     private var nextId = 1L
 
+    /** Simula un fallo de la base al insertar. */
+    var failInsert = false
+
     override fun observeByShift(shiftId: Long, query: String): Flow<List<RegistroIngreso>> = rows.map { list ->
         list.filter {
             it.shiftId == shiftId && (query.isEmpty() ||
@@ -95,6 +97,7 @@ class FakeVehicleEntryRepository : VehicleEntryRepository {
     }
 
     override suspend fun insert(registro: RegistroIngreso): Long {
+        check(!failInsert) { "disk I/O error" }
         val id = nextId++
         rows.value = rows.value + registro.copy(id = id)
         return id
@@ -102,6 +105,8 @@ class FakeVehicleEntryRepository : VehicleEntryRepository {
 
     override suspend fun getByShift(shiftId: Long) = rows.value.filter { it.shiftId == shiftId }
     override suspend fun getBetween(from: Long, to: Long) = rows.value.filter { it.entradaAt in from..to }
+    override suspend fun isInside(shiftId: Long, patente: String) =
+        rows.value.any { it.shiftId == shiftId && it.patente == patente && it.salidaAt == null }
 
     override suspend fun markExit(id: Long, at: Long): Boolean = update(id) { if (it.salidaAt == null) it.copy(salidaAt = at) else null }
     override suspend fun undoExit(id: Long, at: Long): Boolean = update(id) { if (it.salidaAt == at) it.copy(salidaAt = null) else null }
@@ -136,6 +141,8 @@ class FakeBikeEntryRepository : BikeEntryRepository {
     override suspend fun getByShift(shiftId: Long) = rows.value.filter { it.shiftId == shiftId }
     override suspend fun getBetween(from: Long, to: Long) = rows.value.filter { it.entradaAt in from..to }
     override suspend fun latestByRut(rut: String) = rows.value.filter { it.rut == rut }.maxByOrNull { it.entradaAt }
+    override suspend fun isInside(shiftId: Long, rut: String) =
+        rows.value.any { it.shiftId == shiftId && it.rut == rut && it.salidaAt == null }
 
     override suspend fun markExit(id: Long, at: Long): Boolean = update(id) { if (it.salidaAt == null) it.copy(salidaAt = at) else null }
     override suspend fun undoExit(id: Long, at: Long): Boolean = update(id) { if (it.salidaAt == at) it.copy(salidaAt = null) else null }
@@ -173,15 +180,45 @@ class FakePersonaRepository(initial: List<Persona> = emptyList()) : PersonaRepos
         }
     }
 
-    override suspend fun update(persona: Persona) { rows.value = rows.value.map { if (it.id == persona.id) persona else it } }
+    override suspend fun update(persona: Persona) {
+        // Emula el índice único de Room sobre `patente`.
+        check(rows.value.none { it.id != persona.id && it.patente == persona.patente }) { "UNIQUE constraint failed: personas.patente" }
+        rows.value = rows.value.map { if (it.id == persona.id) persona else it }
+    }
     override suspend fun delete(persona: Persona) { rows.value = rows.value.filterNot { it.id == persona.id } }
 }
 
-class FakeExamRepository(var questions: List<ExamenPregunta> = emptyList()) : ExamRepository {
-    val saved = mutableListOf<ExamenResultado>()
-    override suspend fun randomQuestions(limit: Int) = questions.take(limit)
-    override suspend fun saveResult(resultado: ExamenResultado): Long {
-        saved += resultado
-        return saved.size.toLong()
+/** Repositorio de puntos en memoria; arranca con los puntos de fábrica, igual que una instalación nueva. */
+class FakeControlPointRepository(initial: List<ControlPoint> = ControlPoint.DEFAULTS) : ControlPointRepository {
+    val rows = MutableStateFlow(initial)
+
+    /** Simula un fallo de la base al escribir. */
+    var failWrites = false
+
+    // Mismo orden que `PuntoControlDao`: porterías primero y luego por `orden`.
+    private fun List<ControlPoint>.sorted() = sortedWith(compareBy({ it.kind != ControlPoint.Kind.PORTERIA }, { it.order }))
+
+    override fun observeAll(): Flow<List<ControlPoint>> = rows.map { it.sorted() }
+    override suspend fun getAll() = rows.value.sorted()
+    override suspend fun get(id: String) = rows.value.firstOrNull { it.id.equals(id.trim(), ignoreCase = true) }
+
+    override suspend fun insert(point: ControlPoint) {
+        check(!failWrites) { "disk I/O error" }
+        check(rows.value.none { it.id == point.id }) { "UNIQUE constraint failed: puntos_control.id" }
+        rows.value = rows.value + point
     }
+
+    override suspend fun update(point: ControlPoint) {
+        check(!failWrites) { "disk I/O error" }
+        rows.value = rows.value.map { if (it.id == point.id) point else it }
+    }
+}
+
+/** Atajos a los puntos de fábrica para los tests (antes eran constantes del enum). */
+object Points {
+    val PORTERIA_1 = ControlPoint.DEFAULTS[0]
+    val PORTERIA_2 = ControlPoint.DEFAULTS[1]
+    val PORTERIA_3 = ControlPoint.DEFAULTS[2]
+    val BICICLETERO_1 = ControlPoint.DEFAULTS[3]
+    val BICICLETERO_2 = ControlPoint.DEFAULTS[4]
 }

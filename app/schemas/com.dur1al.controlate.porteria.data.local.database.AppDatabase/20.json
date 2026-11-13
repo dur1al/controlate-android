@@ -1,0 +1,457 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 20,
+    "identityHash": "940a113325fe7c79c3e369bc3a8cf9fd",
+    "entities": [
+      {
+        "tableName": "turnos",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `guardia` TEXT NOT NULL, `controlPoint` TEXT NOT NULL, `tipo` TEXT NOT NULL, `fecha` TEXT NOT NULL, `iniciadoAt` INTEGER NOT NULL, `finalizadoAt` INTEGER)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "guardia",
+            "columnName": "guardia",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "controlPoint",
+            "columnName": "controlPoint",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tipo",
+            "columnName": "tipo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fecha",
+            "columnName": "fecha",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "iniciadoAt",
+            "columnName": "iniciadoAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "finalizadoAt",
+            "columnName": "finalizadoAt",
+            "affinity": "INTEGER",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_turnos_iniciadoAt",
+            "unique": false,
+            "columnNames": [
+              "iniciadoAt"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_turnos_iniciadoAt` ON `${TABLE_NAME}` (`iniciadoAt`)"
+          }
+        ],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "registros_ingreso",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `shiftId` INTEGER NOT NULL, `patente` TEXT NOT NULL, `nombreApellido` TEXT NOT NULL, `rut` TEXT, `departamento` TEXT NOT NULL, `descripcionAuto` TEXT NOT NULL, `empresa` TEXT, `tipoPersona` TEXT NOT NULL, `observaciones` TEXT, `padron` TEXT, `esPadron` INTEGER NOT NULL, `entradaAt` INTEGER NOT NULL, `salidaAt` INTEGER, FOREIGN KEY(`shiftId`) REFERENCES `turnos`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "shiftId",
+            "columnName": "shiftId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "patente",
+            "columnName": "patente",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nombreApellido",
+            "columnName": "nombreApellido",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rut",
+            "columnName": "rut",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "departamento",
+            "columnName": "departamento",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "descripcionAuto",
+            "columnName": "descripcionAuto",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "empresa",
+            "columnName": "empresa",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "tipoPersona",
+            "columnName": "tipoPersona",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "observaciones",
+            "columnName": "observaciones",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "padron",
+            "columnName": "padron",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "esPadron",
+            "columnName": "esPadron",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "entradaAt",
+            "columnName": "entradaAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "salidaAt",
+            "columnName": "salidaAt",
+            "affinity": "INTEGER",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_registros_ingreso_shiftId",
+            "unique": false,
+            "columnNames": [
+              "shiftId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_registros_ingreso_shiftId` ON `${TABLE_NAME}` (`shiftId`)"
+          },
+          {
+            "name": "index_registros_ingreso_patente",
+            "unique": false,
+            "columnNames": [
+              "patente"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_registros_ingreso_patente` ON `${TABLE_NAME}` (`patente`)"
+          },
+          {
+            "name": "index_registros_ingreso_entradaAt",
+            "unique": false,
+            "columnNames": [
+              "entradaAt"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_registros_ingreso_entradaAt` ON `${TABLE_NAME}` (`entradaAt`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "turnos",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "shiftId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "personas",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `patente` TEXT NOT NULL, `nombreApellido` TEXT NOT NULL, `departamento` TEXT NOT NULL, `descripcionAuto` TEXT NOT NULL, `empresa` TEXT, `rut` TEXT, `tipoPersona` TEXT, `padron` TEXT)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "patente",
+            "columnName": "patente",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nombreApellido",
+            "columnName": "nombreApellido",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "departamento",
+            "columnName": "departamento",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "descripcionAuto",
+            "columnName": "descripcionAuto",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "empresa",
+            "columnName": "empresa",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "rut",
+            "columnName": "rut",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "tipoPersona",
+            "columnName": "tipoPersona",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "padron",
+            "columnName": "padron",
+            "affinity": "TEXT",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_personas_patente",
+            "unique": true,
+            "columnNames": [
+              "patente"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_personas_patente` ON `${TABLE_NAME}` (`patente`)"
+          },
+          {
+            "name": "index_personas_rut",
+            "unique": false,
+            "columnNames": [
+              "rut"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_personas_rut` ON `${TABLE_NAME}` (`rut`)"
+          }
+        ],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "registros_bicicleta",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `shiftId` INTEGER NOT NULL, `rut` TEXT NOT NULL, `nombre` TEXT NOT NULL, `carrera` TEXT NOT NULL, `tipoPersona` TEXT NOT NULL, `observacion` TEXT, `entradaAt` INTEGER NOT NULL, `salidaAt` INTEGER, FOREIGN KEY(`shiftId`) REFERENCES `turnos`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "shiftId",
+            "columnName": "shiftId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rut",
+            "columnName": "rut",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nombre",
+            "columnName": "nombre",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "carrera",
+            "columnName": "carrera",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tipoPersona",
+            "columnName": "tipoPersona",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "observacion",
+            "columnName": "observacion",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "entradaAt",
+            "columnName": "entradaAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "salidaAt",
+            "columnName": "salidaAt",
+            "affinity": "INTEGER",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_registros_bicicleta_shiftId",
+            "unique": false,
+            "columnNames": [
+              "shiftId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_registros_bicicleta_shiftId` ON `${TABLE_NAME}` (`shiftId`)"
+          },
+          {
+            "name": "index_registros_bicicleta_rut",
+            "unique": false,
+            "columnNames": [
+              "rut"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_registros_bicicleta_rut` ON `${TABLE_NAME}` (`rut`)"
+          },
+          {
+            "name": "index_registros_bicicleta_entradaAt",
+            "unique": false,
+            "columnNames": [
+              "entradaAt"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_registros_bicicleta_entradaAt` ON `${TABLE_NAME}` (`entradaAt`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "turnos",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "shiftId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "puntos_control",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `nombre` TEXT NOT NULL, `tipo` TEXT NOT NULL, `orden` INTEGER NOT NULL, `activo` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nombre",
+            "columnName": "nombre",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tipo",
+            "columnName": "tipo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "orden",
+            "columnName": "orden",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "activo",
+            "columnName": "activo",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '940a113325fe7c79c3e369bc3a8cf9fd')"
+    ]
+  }
+}

@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import android.widget.RadioButton
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
@@ -19,10 +20,12 @@ import com.dur1al.controlate.porteria.domain.model.VehicleEntryInput
 import com.dur1al.controlate.porteria.domain.validation.Rut
 import com.dur1al.controlate.porteria.ui.common.applyRutFormatter
 import com.dur1al.controlate.porteria.ui.common.collectWhenStarted
+import com.dur1al.controlate.porteria.ui.common.expandFully
+import com.dur1al.controlate.porteria.ui.common.focusFirstError
 import com.dur1al.controlate.porteria.ui.common.messageRes
+import com.dur1al.controlate.porteria.ui.common.showFormStatus
 import com.dur1al.controlate.porteria.ui.common.textTrimmed
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -39,6 +42,9 @@ class VehicleEntrySheet : BottomSheetDialogFragment() {
     private val viewModel: PorteriaViewModel by activityViewModel()
     private var lookupJob: Job? = null
 
+    /** Tras pulsar "Registrar", el siguiente render de errores lleva el foco al primero. */
+    private var focusErrorOnRender = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setStyle(STYLE_NORMAL, R.style.Theme_Controlate_BottomSheet)
@@ -51,7 +57,7 @@ class VehicleEntrySheet : BottomSheetDialogFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        viewModel.clearFormErrors()
+        if (savedInstanceState == null) viewModel.onFormOpened()
         binding.etRut.applyRutFormatter()
         binding.cbEsPadron.setOnCheckedChangeListener { _, checked -> binding.tilPadron.isVisible = checked }
         binding.tilPadron.isVisible = binding.cbEsPadron.isChecked
@@ -61,30 +67,54 @@ class VehicleEntrySheet : BottomSheetDialogFragment() {
         if (detail != null) showReadOnly(detail) else setUpNewEntry()
     }
 
+    override fun onStart() {
+        super.onStart()
+        expandFully()
+    }
+
     private fun setUpNewEntry() {
         binding.rbVisita.isChecked = true
         binding.etPatente.doAfterTextChanged { text ->
-            binding.tilPatente.error = null
+            viewModel.clearFieldError(ValidationError.Field.PATENTE)
             debounceLookup { viewModel.lookupPlate(text?.toString().orEmpty()) }
         }
         binding.etRut.doAfterTextChanged { text ->
-            binding.tilRut.error = null
+            viewModel.clearFieldError(ValidationError.Field.RUT)
             val raw = text?.toString().orEmpty()
             if (Rut.isValid(raw)) debounceLookup { viewModel.lookupRut(raw) }
         }
-        binding.etNombre.doAfterTextChanged { binding.tilNombre.error = null }
-        binding.etPadron.doAfterTextChanged { binding.tilPadron.error = null }
-        binding.btnGuardar.setOnClickListener { viewModel.register(readInput()) }
+        binding.etNombre.doAfterTextChanged { viewModel.clearFieldError(ValidationError.Field.NOMBRE) }
+        binding.etPadron.doAfterTextChanged { viewModel.clearFieldError(ValidationError.Field.PADRON) }
+        binding.cbEsPadron.setOnCheckedChangeListener { _, checked ->
+            binding.tilPadron.isVisible = checked
+            if (!checked) viewModel.clearFieldError(ValidationError.Field.PADRON)
+        }
+        validateOnBlur(binding.etPatente, ValidationError.Field.PATENTE)
+        validateOnBlur(binding.etNombre, ValidationError.Field.NOMBRE)
+        validateOnBlur(binding.etRut, ValidationError.Field.RUT)
+        binding.btnGuardar.setOnClickListener {
+            focusErrorOnRender = true
+            viewModel.register(readInput())
+        }
 
         collectWhenStarted(viewModel.formErrors, ::showErrors)
+        collectWhenStarted(viewModel.formSaving) { saving -> binding.btnGuardar.isEnabled = !saving }
         collectWhenStarted(viewModel.formEvents) { event ->
             when (event) {
-                PorteriaViewModel.FormEvent.Saved -> {
-                    Snackbar.make(requireActivity().findViewById(android.R.id.content), R.string.entry_registered, Snackbar.LENGTH_SHORT).show()
-                    dismiss()
-                }
+                // La confirmación la muestra la pantalla principal, anclada sobre su botón.
+                PorteriaViewModel.FormEvent.Saved -> dismiss()
                 is PorteriaViewModel.FormEvent.Autofill -> autofill(event.persona)
+                is PorteriaViewModel.FormEvent.Failed -> {
+                    focusErrorOnRender = false
+                    binding.tvFormStatus.showFormStatus(event.message.resolve(requireContext()), R.color.error_red)
+                }
             }
+        }
+    }
+
+    private fun validateOnBlur(field: EditText, which: ValidationError.Field) {
+        field.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus && _binding != null) viewModel.onFieldBlur(which, field.textTrimmed())
         }
     }
 
@@ -128,6 +158,10 @@ class VehicleEntrySheet : BottomSheetDialogFragment() {
         binding.tilNombre.error = byField[ValidationError.Field.NOMBRE]?.let { getString(it.messageRes) }
         binding.tilRut.error = byField[ValidationError.Field.RUT]?.let { getString(it.messageRes) }
         binding.tilPadron.error = byField[ValidationError.Field.PADRON]?.let { getString(it.messageRes) }
+        if (focusErrorOnRender && errors.isNotEmpty()) {
+            focusErrorOnRender = false
+            focusFirstError(listOf(binding.tilPatente, binding.tilNombre, binding.tilRut, binding.tilPadron))
+        }
     }
 
     /** Completa solo los campos vacíos: nunca pisa lo que el guardia ya escribió. */
@@ -139,7 +173,8 @@ class VehicleEntrySheet : BottomSheetDialogFragment() {
         if (etAuto.text.isNullOrBlank()) etAuto.setText(persona.descripcionAuto)
         if (etEmpresa.text.isNullOrBlank()) etEmpresa.setText(persona.empresa)
         typeButton(PersonaType.fromCode(persona.tipoPersona))?.isChecked = true
-        Snackbar.make(root, R.string.autofill_match_found, Snackbar.LENGTH_SHORT).show()
+        // Aviso en línea: un snackbar dentro del sheet tapaba el botón "Registrar".
+        tvFormStatus.showFormStatus(getString(R.string.autofill_match_found), R.color.primary_light)
     }
 
     private fun showReadOnly(r: RegistroIngreso) = with(binding) {

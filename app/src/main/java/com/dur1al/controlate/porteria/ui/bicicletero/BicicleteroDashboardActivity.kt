@@ -2,21 +2,23 @@ package com.dur1al.controlate.porteria.ui.bicicletero
 
 import android.content.Context
 import android.content.Intent
-import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.dur1al.controlate.R
 import com.dur1al.controlate.databinding.ActivityBicicleteroDashboardBinding
 import com.dur1al.controlate.porteria.domain.model.ControlPoint
+import com.dur1al.controlate.porteria.ui.common.applyAccent
+import com.dur1al.controlate.porteria.ui.common.applyReadableTint
 import com.dur1al.controlate.porteria.ui.common.collectWhenStarted
-import com.dur1al.controlate.porteria.ui.common.colorRes
-import com.dur1al.controlate.porteria.ui.common.labelRes
+import com.dur1al.controlate.porteria.ui.common.color
+import com.dur1al.controlate.porteria.ui.common.readableColorOn
 import com.dur1al.controlate.porteria.ui.common.shareReport
 import com.dur1al.controlate.porteria.ui.login.LoginActivity
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -43,7 +45,7 @@ class BicicleteroDashboardActivity : AppCompatActivity() {
         binding.btnEndShift.setOnClickListener { confirmEndShift() }
 
         collectWhenStarted(viewModel.state) { state ->
-            state.turno?.let { applyPoint(ControlPoint.fromId(it.controlPoint) ?: ControlPoint.BICICLETERO_1) }
+            state.turno?.let { turno -> applyPoint(state.point ?: fallbackPoint(turno.controlPoint)) }
             adapter.submitList(state.registros)
             val empty = !state.loading && state.registros.isEmpty()
             binding.emptyStateLayout.isVisible = empty
@@ -55,24 +57,42 @@ class BicicleteroDashboardActivity : AppCompatActivity() {
                 BicicleteroViewModel.Event.NoActiveShift, BicicleteroViewModel.Event.ShiftEnded -> goToLogin()
                 is BicicleteroViewModel.Event.ExitMarked ->
                     Snackbar.make(binding.root, getString(R.string.exit_registered_for, event.nombre), Snackbar.LENGTH_LONG)
+                        .setAnchorView(binding.bottomBarCard)
                         .setAction(R.string.action_undo) { viewModel.undoExit(event.id, event.at) }
                         .show()
                 is BicicleteroViewModel.Event.Share ->
                     if (!shareReport(event.file)) {
-                        Snackbar.make(binding.root, R.string.share_report_unavailable, Snackbar.LENGTH_LONG).show()
+                        Snackbar.make(binding.root, R.string.share_report_unavailable, Snackbar.LENGTH_LONG).setAnchorView(binding.bottomBarCard).show()
                     }
                 is BicicleteroViewModel.Event.Message ->
-                    Snackbar.make(binding.root, event.message.resolve(this), Snackbar.LENGTH_SHORT).show()
+                    Snackbar.make(binding.root, event.message.resolve(this), Snackbar.LENGTH_SHORT).setAnchorView(binding.bottomBarCard).show()
             }
         }
     }
 
+    private var themedPoint: ControlPoint? = null
+
+    /** Turno heredado cuyo punto ya no existe: se muestra con el primer color de bicicleteros. */
+    private fun fallbackPoint(id: String) =
+        ControlPoint(id, getString(R.string.unknown_control_point, id), ControlPoint.Kind.BICICLETERO, 0)
+    private var toolbarForeground: Int? = null
+
+    /** Color del punto en cabecera, toolbar y botón principal; texto e iconos se eligen por contraste. */
     private fun applyPoint(point: ControlPoint) {
-        val color = ContextCompat.getColor(this, point.colorRes)
+        if (point == themedPoint) return
+        themedPoint = point
+        val color = point.color(this)
+        val foreground = binding.tvHeaderTitle.readableColorOn(color)
         binding.headerLayout.setBackgroundColor(color)
+        binding.tvHeaderTitle.setTextColor(foreground)
+        binding.btnEndShift.applyReadableTint(color)
         binding.toolbar.setBackgroundColor(color)
-        binding.toolbar.subtitle = getString(point.labelRes)
-        binding.btnNuevo.backgroundTintList = ColorStateList.valueOf(color)
+        binding.toolbar.setTitleTextColor(foreground)
+        binding.toolbar.setSubtitleTextColor(foreground)
+        binding.toolbar.subtitle = point.name
+        binding.btnNuevo.applyAccent(color)
+        toolbarForeground = foreground
+        invalidateOptionsMenu()
     }
 
     private fun confirmEndShift() {
@@ -91,6 +111,11 @@ class BicicleteroDashboardActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_bicicletero, menu)
+        toolbarForeground?.let { color ->
+            menu.findItem(R.id.action_exportar)?.icon?.let { icon ->
+                DrawableCompat.setTint(DrawableCompat.wrap(icon).mutate(), color)
+            }
+        }
         return true
     }
 

@@ -3,23 +3,22 @@ package com.dur1al.controlate.porteria.di
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.dur1al.controlate.porteria.data.local.security.AdminPinManager
+import com.dur1al.controlate.porteria.data.local.security.InMemoryKeyValueStore
+import com.dur1al.controlate.porteria.testing.MainDispatcherRule
 import com.dur1al.controlate.porteria.ui.admin.AdminViewModel
+import com.dur1al.controlate.porteria.ui.admin.ControlPointsViewModel
 import com.dur1al.controlate.porteria.ui.admin.ShiftReportsViewModel
 import com.dur1al.controlate.porteria.ui.bicicletero.BicicleteroViewModel
 import com.dur1al.controlate.porteria.ui.db.DirectoryViewModel
-import com.dur1al.controlate.porteria.ui.examen.ExamenViewModel
 import com.dur1al.controlate.porteria.ui.login.LoginViewModel
 import com.dur1al.controlate.porteria.ui.porteria.PorteriaViewModel
 import com.dur1al.controlate.porteria.ui.settings.SettingsViewModel
-import com.dur1al.controlate.porteria.testing.MainDispatcherRule
-import com.dur1al.controlate.porteria.data.local.security.AdminPinManager
-import com.dur1al.controlate.porteria.data.local.security.InMemoryKeyValueStore
 import org.junit.Assert.assertNotNull
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.koin.android.ext.koin.androidContext
-import org.koin.core.parameter.parametersOf
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 
@@ -48,7 +47,7 @@ class KoinGraphTest {
         assertNotNull(koin.get<ShiftReportsViewModel>())
         assertNotNull(koin.get<DirectoryViewModel>())
         assertNotNull(koin.get<SettingsViewModel>())
-        assertNotNull(koin.get<ExamenViewModel> { parametersOf("Guardia") })
+        assertNotNull(koin.get<ControlPointsViewModel>())
         koin.close()
     }
 }

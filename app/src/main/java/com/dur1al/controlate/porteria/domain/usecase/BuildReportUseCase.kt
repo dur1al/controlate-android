@@ -9,6 +9,7 @@ import com.dur1al.controlate.porteria.domain.report.ReportDocument.Meta
 import com.dur1al.controlate.porteria.domain.report.ReportDocument.MetaField
 import com.dur1al.controlate.porteria.domain.report.ReportLabels
 import com.dur1al.controlate.porteria.domain.repository.BikeEntryRepository
+import com.dur1al.controlate.porteria.domain.repository.ControlPointRepository
 import com.dur1al.controlate.porteria.domain.repository.PersonaRepository
 import com.dur1al.controlate.porteria.domain.repository.ShiftRepository
 import com.dur1al.controlate.porteria.domain.repository.VehicleEntryRepository
@@ -23,6 +24,7 @@ class BuildReportUseCase(
     private val vehicles: VehicleEntryRepository,
     private val bikes: BikeEntryRepository,
     private val personas: PersonaRepository,
+    private val points: ControlPointRepository,
     private val labels: ReportLabels,
     private val clock: Clock,
     private val zone: ZoneId = ZoneId.systemDefault()
@@ -31,11 +33,13 @@ class BuildReportUseCase(
     /** Reporte de un turno; `null` si el turno no existe. Las filas pueden venir vacías. */
     suspend fun shift(shiftId: Long): ReportDocument? {
         val turno = shifts.get(shiftId) ?: return null
-        val isBike = ControlPoint.fromId(turno.controlPoint)?.kind == ControlPoint.Kind.BICICLETERO
-        return if (isBike) bikeShift(turno) else vehicleShift(turno)
+        val point = points.get(turno.controlPoint)
+        val kind = point?.kind ?: ControlPoint.Kind.fromId(turno.controlPoint)
+        val meta = shiftMeta(turno, point?.name ?: labels.unknownControlPoint(turno.controlPoint))
+        return if (kind == ControlPoint.Kind.BICICLETERO) bikeShift(turno, meta) else vehicleShift(turno, meta)
     }
 
-    private suspend fun vehicleShift(turno: Turno): ReportDocument {
+    private suspend fun vehicleShift(turno: Turno, meta: List<Meta>): ReportDocument {
         val rows = vehicles.getByShift(turno.id).mapIndexed { i, r ->
             listOf(
                 (i + 1).toString(), r.patente, r.nombreApellido, r.rut.formatRut(), r.departamento,
@@ -44,14 +48,14 @@ class BuildReportUseCase(
         }
         return ReportDocument(
             type = ReportDocument.Type.VEHICLE_SHIFT,
-            meta = shiftMeta(turno),
+            meta = meta,
             columns = listOf(Column.INDEX, Column.PATENTE, Column.NOMBRE, Column.RUT, Column.DEPTO, Column.TIPO, Column.ENTRADA, Column.SALIDA),
             rows = rows,
             fileStem = stem("reporte", turno.controlPoint, turno.fecha, turno.id.toString())
         )
     }
 
-    private suspend fun bikeShift(turno: Turno): ReportDocument {
+    private suspend fun bikeShift(turno: Turno, meta: List<Meta>): ReportDocument {
         val rows = bikes.getByShift(turno.id).mapIndexed { i, r ->
             listOf(
                 (i + 1).toString(), r.rut.formatRut(), r.nombre, labels.personaType(r.tipoPersona),
@@ -60,7 +64,7 @@ class BuildReportUseCase(
         }
         return ReportDocument(
             type = ReportDocument.Type.BIKE_SHIFT,
-            meta = shiftMeta(turno),
+            meta = meta,
             columns = listOf(Column.INDEX, Column.RUT, Column.NOMBRE, Column.TIPO, Column.CARRERA, Column.ENTRADA, Column.SALIDA),
             rows = rows,
             fileStem = stem("reporte", turno.controlPoint, turno.fecha, turno.id.toString())
@@ -70,7 +74,7 @@ class BuildReportUseCase(
     /** Resumen administrativo del día actual a partir de estadísticas ya calculadas. */
     fun dailySummary(stats: List<PointStat>): ReportDocument {
         val rows = stats.map {
-            listOf(labels.controlPoint(it.controlPoint.id), it.entradas.toString(), it.salidas.toString(), it.dentro.toString())
+            listOf(it.controlPoint.name, it.entradas.toString(), it.salidas.toString(), it.dentro.toString())
         }
         val total = listOf(
             ReportDocument.TOTAL_ROW_LABEL,
@@ -101,8 +105,8 @@ class BuildReportUseCase(
         )
     }
 
-    private fun shiftMeta(turno: Turno) = listOf(
-        Meta(MetaField.POINT, labels.controlPoint(turno.controlPoint)),
+    private fun shiftMeta(turno: Turno, pointName: String) = listOf(
+        Meta(MetaField.POINT, pointName),
         Meta(MetaField.DATE, TimeFormat.isoToDisplay(turno.fecha)),
         Meta(MetaField.GUARD, turno.guardia),
         Meta(MetaField.SHIFT_TYPE, labels.shiftType(turno.tipo))

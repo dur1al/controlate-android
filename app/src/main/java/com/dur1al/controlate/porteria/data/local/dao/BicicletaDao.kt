@@ -31,6 +31,10 @@ interface BicicletaDao {
     @Query("SELECT * FROM registros_bicicleta WHERE rut = :rut ORDER BY entradaAt DESC LIMIT 1")
     suspend fun getLatestByRut(rut: String): RegistroBicicleta?
 
+    /** ¿El RUT ya tiene una bicicleta sin salida en este turno? (evita ingresos duplicados). */
+    @Query("SELECT EXISTS(SELECT 1 FROM registros_bicicleta WHERE shiftId = :shiftId AND rut = :rut AND salidaAt IS NULL)")
+    suspend fun isInside(shiftId: Long, rut: String): Boolean
+
     @Query("UPDATE registros_bicicleta SET salidaAt = :at WHERE id = :id AND salidaAt IS NULL")
     suspend fun markExit(id: Long, at: Long): Int
 

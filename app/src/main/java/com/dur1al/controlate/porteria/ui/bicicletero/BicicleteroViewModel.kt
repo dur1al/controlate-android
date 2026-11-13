@@ -6,8 +6,10 @@ import com.dur1al.controlate.R
 import com.dur1al.controlate.porteria.data.local.entities.RegistroBicicleta
 import com.dur1al.controlate.porteria.data.local.entities.Turno
 import com.dur1al.controlate.porteria.domain.model.BikeEntryInput
+import com.dur1al.controlate.porteria.domain.model.ControlPoint
 import com.dur1al.controlate.porteria.domain.model.ValidationError
 import com.dur1al.controlate.porteria.domain.report.ReportExporter
+import com.dur1al.controlate.porteria.domain.repository.ControlPointRepository
 import com.dur1al.controlate.porteria.domain.repository.BikeEntryRepository
 import com.dur1al.controlate.porteria.domain.usecase.BuildReportUseCase
 import com.dur1al.controlate.porteria.domain.usecase.EndShiftUseCase
@@ -16,6 +18,7 @@ import com.dur1al.controlate.porteria.domain.usecase.GetActiveShiftUseCase
 import com.dur1al.controlate.porteria.domain.usecase.MarkExitUseCase
 import com.dur1al.controlate.porteria.domain.usecase.RegisterBikeEntryUseCase
 import com.dur1al.controlate.porteria.domain.usecase.RegisterEntryOutcome
+import com.dur1al.controlate.porteria.domain.usecase.ValidateRegistroUseCase
 import com.dur1al.controlate.porteria.domain.validation.Rut
 import com.dur1al.controlate.porteria.ui.common.EventChannel
 import com.dur1al.controlate.porteria.ui.common.UiMessage
@@ -41,12 +44,16 @@ class BicicleteroViewModel(
     entries: BikeEntryRepository,
     private val closeShift: EndShiftUseCase,
     private val buildReport: BuildReportUseCase,
-    private val exporter: ReportExporter
+    private val exporter: ReportExporter,
+    private val validator: ValidateRegistroUseCase,
+    private val controlPoints: ControlPointRepository
 ) : ViewModel() {
 
     data class UiState(
         val loading: Boolean = true,
         val turno: Turno? = null,
+        /** Punto del turno (color y nombre); `null` si el id ya no existe en la tabla. */
+        val point: ControlPoint? = null,
         val query: String = "",
         val registros: List<RegistroBicicleta> = emptyList(),
         val busy: Boolean = false
@@ -63,6 +70,7 @@ class BicicleteroViewModel(
     sealed interface FormEvent {
         data object Saved : FormEvent
         data class Autofill(val data: FindPersonaUseCase.BikeAutofill) : FormEvent
+        data class Failed(val message: UiMessage) : FormEvent
     }
 
     private val _state = MutableStateFlow(UiState())
@@ -77,6 +85,13 @@ class BicicleteroViewModel(
     private val formChannel = EventChannel<FormEvent>()
     val formEvents: Flow<FormEvent> = formChannel.events
 
+    /** `true` mientras se guarda un ingreso: el formulario deshabilita "Registrar" (evita duplicados por doble toque). */
+    private val _formSaving = MutableStateFlow(false)
+    val formSaving: StateFlow<Boolean> = _formSaving.asStateFlow()
+
+    /** Último autocompletado ofrecido en el formulario abierto: evita repetir el aviso. */
+    private var lastAutofill: FindPersonaUseCase.BikeAutofill? = null
+
     private val shiftId = MutableStateFlow<Long?>(null)
     private val query = MutableStateFlow("")
 
@@ -87,7 +102,7 @@ class BicicleteroViewModel(
                 _state.update { it.copy(loading = false) }
                 eventChannel.send(Event.NoActiveShift)
             } else {
-                _state.update { it.copy(turno = turno) }
+                _state.update { it.copy(turno = turno, point = controlPoints.get(turno.controlPoint)) }
                 shiftId.value = turno.id
             }
         }
@@ -106,26 +121,59 @@ class BicicleteroViewModel(
         _state.update { it.copy(query = value) }
     }
 
-    fun clearFormErrors() {
+    /** Se llama al abrir el formulario: parte sin errores ni autocompletado previo. */
+    fun onFormOpened() {
         _formErrors.value = emptyList()
+        lastAutofill = null
+    }
+
+    /** Quita el error de un campo en cuanto el guardia lo corrige (el resto se mantiene visible). */
+    fun clearFieldError(field: ValidationError.Field) {
+        _formErrors.update { errors -> errors.filterNot { it.field == field } }
+    }
+
+    /**
+     * Valida un campo al salir de él. Solo marca errores de formato: "obligatorio" se informa
+     * al pulsar "Registrar", para no regañar al guardia por un campo que aún no completa.
+     */
+    fun onFieldBlur(field: ValidationError.Field, value: String) {
+        if (value.isBlank()) return
+        val error = when (field) {
+            ValidationError.Field.RUT -> validator.rut(value, required = true)
+            ValidationError.Field.NOMBRE -> validator.nombre(value)
+            ValidationError.Field.CARRERA -> validator.carrera(value)
+            else -> null
+        } ?: return
+        _formErrors.update { errors -> errors.filterNot { it.field == field } + error }
     }
 
     fun register(input: BikeEntryInput) {
         val id = shiftId.value ?: return eventChannel.send(Event.NoActiveShift)
+        if (_formSaving.value) return
+        _formSaving.value = true
         viewModelScope.launch {
-            when (val outcome = registerEntry(id, input)) {
-                is RegisterEntryOutcome.Invalid -> _formErrors.value = outcome.errors
-                is RegisterEntryOutcome.Saved -> {
-                    _formErrors.value = emptyList()
-                    formChannel.send(FormEvent.Saved)
+            runCatchingCancellable { registerEntry(id, input) }
+                .onSuccess { outcome ->
+                    when (outcome) {
+                        is RegisterEntryOutcome.Invalid -> _formErrors.value = outcome.errors
+                        is RegisterEntryOutcome.Saved -> {
+                            _formErrors.value = emptyList()
+                            formChannel.send(FormEvent.Saved)
+                            eventChannel.send(Event.Message(UiMessage(R.string.entry_registered)))
+                        }
+                    }
                 }
-            }
+                .onFailure { formChannel.send(FormEvent.Failed(UiMessage(R.string.error_save_entry))) }
+            _formSaving.value = false
         }
     }
 
     fun lookupRut(raw: String) {
         viewModelScope.launch {
-            findPersona.bikeAutofill(raw)?.let { formChannel.send(FormEvent.Autofill(it)) }
+            val data = findPersona.bikeAutofill(raw) ?: return@launch
+            if (data == lastAutofill) return@launch
+            lastAutofill = data
+            formChannel.send(FormEvent.Autofill(data))
         }
     }
 
