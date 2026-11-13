@@ -6,9 +6,8 @@ Todos los cambios relevantes de este proyecto se documentan en este archivo.
 
 ### Added
 - Gestión operativa de accesos vehiculares y bicicletero con arquitectura Clean + MVVM + Koin + Room (v17).
-- Simulador de examen OS-10 con banco de preguntas normativas y cálculo de aprobación.
 - Configuración inicial de PIN administrativo con hashing `PBKDF2WithHmacSHA256` + salt en `EncryptedSharedPreferences` y bloqueo por intentos fallidos.
-- Pruebas unitarias para `PinSecurityHelper`, `RutUtils`, `ValidateRegistroUseCase` y `CalcularResultadoExamenUseCase`.
+- Pruebas unitarias para `PinSecurityHelper`, `RutUtils` y `ValidateRegistroUseCase`.
 - Documentación técnica con diagramas Mermaid, ADRs (`docs/ARCHITECTURE.md`), `SECURITY.md`, `CONTRIBUTING.md` y CI en GitHub Actions.
 
 ### Security

@@ -5,7 +5,7 @@
 ![Min SDK](https://img.shields.io/badge/Min%20SDK-26%20(Android%208.0)-3DDC84?logo=android&logoColor=white)
 ![Architecture](https://img.shields.io/badge/Architecture-Clean%20%2B%20MVVM-6C63FF)
 
-Aplicación Android nativa **offline-first** para el control operativo de accesos vehiculares, gestión de bicicleteros, trazabilidad de turnos y capacitación normativa de guardias (simulador OS-10).
+Aplicación Android nativa **offline-first** para el control operativo de accesos vehiculares, gestión de bicicleteros y trazabilidad de turnos en porterías.
 
 Diseñada para operar de forma continua en garitas y puntos de control con conectividad nula o intermitente, priorizando velocidad de registro, integridad de auditoría y privacidad de datos en el dispositivo.
 
@@ -34,7 +34,6 @@ En puntos de control físicos (porterías, estacionamientos, bicicleteros), las 
 - **Trazabilidad por Turno:** Cada ingreso y salida queda sellado con el guardia activo, tipo de turno (`DÍA` / `NOCHE`), `shiftId` y punto de control (`ControlPoint`).
 - **Identidad Visual Dinámica:** Cada punto de control aplica su propia paleta cromática para reducir errores de registro en cambios de garita.
 - **Exportación Autónoma:** Generación local de reportes de turno y resúmenes administrativos en PDF y Excel (`.xlsx`) mediante `FileProvider`.
-- **Capacitación OS-10 Integrada:** Simulador de examen de 60 preguntas con banco normativo local, cálculo de aprobación (70%) e historial de intentos.
 
 ---
 
@@ -46,8 +45,8 @@ La aplicación sigue **Clean Architecture + MVVM** con inyección de dependencia
 flowchart TD
     UI["Capa UI (Activities, BottomSheets, Adapters, ViewBinding)"]
     VM["ViewModels (StateFlow / LiveData)"]
-    UC["Capa Domain (UseCases: ValidateRegistro, SaveRegistro, MarkExit, ExportShiftReport, GenerarExamen, CalcularResultadoExamen)"]
-    REPO["Repositorios (Registro, Bicicleta, Persona, Examen)"]
+    UC["Capa Domain (UseCases: ValidateRegistro, SaveRegistro, MarkExit, SearchPersona, ExportShiftReport)"]
+    REPO["Repositorios (Registro, Bicicleta, Persona)"]
     DATA["Persistencia & Seguridad (Room AppDatabase v17, SessionManager, SecurityManager)"]
 
     UI --> VM
@@ -66,7 +65,7 @@ app/src/main/java/com/dur1al/controlate/
     ├── data/
     │   ├── ControlPoint.kt         # Puntos de control e identidad visual
     │   ├── local/
-    │   │   ├── dao/                # RegistroDao, BicicletaDao, PersonaDao, ExamenDao
+    │   │   ├── dao/                # RegistroDao, BicicletaDao, PersonaDao
     │   │   ├── database/           # AppDatabase (Room v17 + SeedCallback)
     │   │   ├── entities/           # Entidades SQLite
     │   │   ├── security/           # SecurityManager + PinSecurityHelper (PBKDF2)
@@ -76,9 +75,9 @@ app/src/main/java/com/dur1al/controlate/
     │   └── AppModule.kt            # Grafo de dependencias Koin
     ├── domain/
     │   ├── model/                  # PersonaType, ShiftType, ShiftInfo, Result
-    │   ├── usecase/                # Casos de uso de negocio y examen OS-10
+    │   ├── usecase/                # Casos de uso de negocio (ingresos, salidas, reportes)
     │   └── util/                   # DateFormatter
-    ├── ui/                         # Pantallas MVVM (login, dashboard, bicicletero, admin, db, directory, history, settings, examen)
+    ├── ui/                         # Pantallas MVVM (login, dashboard, bicicletero, admin, db, directory, history, settings)
     └── utils/                      # ReportManager, RutUtils, SyncManager, PointDisplayHelper
 ```
 
@@ -158,29 +157,6 @@ erDiagram
         long horaEntrada
         long horaSalida
     }
-
-    EXAMEN_PREGUNTA {
-        int id PK
-        string pregunta
-        string opcionA
-        string opcionB
-        string opcionC
-        string opcionD
-        int respuestaCorrecta
-        string categoria
-        string explicacion
-    }
-
-    EXAMEN_RESULTADO {
-        int id PK
-        string guardiaNombre
-        string fecha
-        int puntaje
-        int totalPreguntas
-        float porcentaje
-        boolean aprobado
-        int tiempoEmpleadoSegundos
-    }
 ```
 
 ---
@@ -228,7 +204,7 @@ cd controlate-android
 
 1. Abre el proyecto en **Android Studio** y sincroniza Gradle.
 2. Ejecuta la app en un emulador o dispositivo físico (`minSdk 26`).
-3. En la primera ejecución, Room precarga automáticamente el directorio demo (`seed_personas.json`) y el banco de preguntas OS-10 (`seed_preguntas.json`).
+3. En la primera ejecución, Room precarga automáticamente el directorio demo (`seed_personas.json`).
 4. Al pulsar **Vista Admin** por primera vez, la app solicitará definir un **PIN numérico de 4 a 8 dígitos**.
 
 ---
@@ -236,7 +212,7 @@ cd controlate-android
 ## Pruebas y Calidad
 
 ```bash
-# Tests unitarios JVM (lógica de negocio, validadores, hashing PBKDF2, RUT, examen OS-10)
+# Tests unitarios JVM (lógica de negocio, validadores, hashing PBKDF2, RUT)
 ./gradlew testDebugUnitTest --console=plain
 
 # Análisis estático Android Lint
