@@ -8,62 +8,43 @@ import androidx.recyclerview.widget.RecyclerView
 import com.dur1al.controlate.R
 import com.dur1al.controlate.databinding.ItemBicicletaBinding
 import com.dur1al.controlate.porteria.data.local.entities.RegistroBicicleta
+import com.dur1al.controlate.porteria.domain.model.PersonaType
+import com.dur1al.controlate.porteria.domain.report.ReportDocument
+import com.dur1al.controlate.porteria.domain.time.TimeFormat
+import com.dur1al.controlate.porteria.domain.validation.Rut
+import com.dur1al.controlate.porteria.ui.common.labelRes
 
-/**
- * Adapter para la lista de registros de bicicletas.
- * Extraído de [BicicleteroDashboardActivity] para reutilización y testeo.
- */
+/** Lista de bicicletas del turno. Tocar un registro sin salida la marca (con deshacer en la Activity). */
 class BicicletaAdapter(
-    private val onSalidaClick: (RegistroBicicleta) -> Unit
-) : ListAdapter<RegistroBicicleta, BicicletaAdapter.ViewHolder>(DiffCallback()) {
+    private val onExitClick: (RegistroBicicleta) -> Unit
+) : ListAdapter<RegistroBicicleta, BicicletaAdapter.ViewHolder>(Diff) {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val binding = ItemBicicletaBinding.inflate(
-            LayoutInflater.from(parent.context),
-            parent,
-            false
-        )
-        return ViewHolder(binding)
-    }
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
+        ViewHolder(ItemBicicletaBinding.inflate(LayoutInflater.from(parent.context), parent, false))
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bind(getItem(position), onSalidaClick)
-    }
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) = holder.bind(getItem(position))
 
-    class ViewHolder(
-        private val binding: ItemBicicletaBinding
-    ) : RecyclerView.ViewHolder(binding.root) {
+    inner class ViewHolder(private val binding: ItemBicicletaBinding) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(item: RegistroBicicleta, onSalidaClick: (RegistroBicicleta) -> Unit) {
-            val context = binding.root.context
-            binding.tvNombre.text = context.getString(
-                R.string.nombre_rut_format,
-                item.nombre,
-                item.rut
+        fun bind(item: RegistroBicicleta) = with(binding) {
+            val context = root.context
+            tvNombre.text = context.getString(R.string.nombre_rut_format, item.nombre, Rut.format(item.rut))
+            tvCarrera.text = context.getString(
+                R.string.bike_detail_format, item.carrera, context.getString(PersonaType.fromCode(item.tipoPersona).labelRes)
             )
-            binding.tvCarrera.text = context.getString(
-                R.string.bike_detail_format,
-                item.carrera,
-                item.tipoPersona
+            tvEntrada.text = context.getString(R.string.entrada_format, TimeFormat.time(item.entradaAt))
+            tvSalida.text = context.getString(
+                R.string.salida_format, item.salidaAt?.let { TimeFormat.time(it) } ?: ReportDocument.NO_TIME
             )
-            binding.tvEntrada.text = context.getString(R.string.entrada_format, item.horaEntrada)
-            binding.tvSalida.text = context.getString(
-                R.string.salida_format,
-                item.horaSalida ?: "---"
-            )
-            binding.root.setOnClickListener { onSalidaClick(item) }
+            val inside = item.salidaAt == null
+            root.isClickable = inside
+            root.contentDescription = if (inside) context.getString(R.string.bike_tap_to_exit) else null
+            root.setOnClickListener(if (inside) ({ onExitClick(item) }) else null)
         }
     }
 
-    class DiffCallback : DiffUtil.ItemCallback<RegistroBicicleta>() {
-        override fun areItemsTheSame(
-            old: RegistroBicicleta,
-            new: RegistroBicicleta
-        ): Boolean = old.id == new.id
-
-        override fun areContentsTheSame(
-            old: RegistroBicicleta,
-            new: RegistroBicicleta
-        ): Boolean = old == new
+    private object Diff : DiffUtil.ItemCallback<RegistroBicicleta>() {
+        override fun areItemsTheSame(old: RegistroBicicleta, new: RegistroBicicleta) = old.id == new.id
+        override fun areContentsTheSame(old: RegistroBicicleta, new: RegistroBicicleta) = old == new
     }
 }

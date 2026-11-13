@@ -22,7 +22,7 @@
             android:id="@+id/tvResultadoTitulo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Resultado Examen OS-10"
+            android:text="@string/examen_resultado_titulo"
             android:textColor="@color/white"
             android:textSize="20sp"
             android:textStyle="bold" />
@@ -65,7 +65,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="Exigencia oficial OS-10: Mínimo 70% (42/60)"
+            android:text="@string/examen_criterio"
             android:textColor="#AAAAAA"
             android:textSize="12sp" />
 
@@ -107,7 +107,7 @@
             android:layout_height="54dp"
             android:layout_marginTop="24dp"
             android:backgroundTint="@color/bicicletero1_primary"
-            android:text="Aceptar"
+            android:text="@string/dialog_ok"
             android:textColor="@color/white" />
 
     </LinearLayout>

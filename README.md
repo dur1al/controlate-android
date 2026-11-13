@@ -1,246 +1,293 @@
 # Controlate Android
 
-![Android CI](https://github.com/dur1al/controlate-android/actions/workflows/android.yml/badge.svg)
+[![Android CI](https://github.com/dur1al/controlate-android/actions/workflows/android.yml/badge.svg)](https://github.com/dur1al/controlate-android/actions/workflows/android.yml)
 ![Kotlin](https://img.shields.io/badge/Kotlin-1.9.24-7F52FF?logo=kotlin&logoColor=white)
-![Min SDK](https://img.shields.io/badge/Min%20SDK-26%20(Android%208.0)-3DDC84?logo=android&logoColor=white)
-![Architecture](https://img.shields.io/badge/Architecture-Clean%20%2B%20MVVM-6C63FF)
+![Min SDK](https://img.shields.io/badge/minSdk-26%20(Android%208.0)-3DDC84?logo=android&logoColor=white)
+![Architecture](https://img.shields.io/badge/Clean%20Architecture-MVVM-6C63FF)
+![Tests](https://img.shields.io/badge/tests-JVM%20%2B%20Robolectric-success)
 
-Aplicación Android nativa **offline-first** para el control operativo de accesos vehiculares, gestión de bicicleteros y trazabilidad de turnos en porterías.
+Aplicación Android nativa **offline-first** para el control de accesos vehiculares y bicicleteros en porterías: registro de ingresos y salidas por turno, directorio con autocompletado, reportes PDF y un simulador del examen OS-10 para guardias de seguridad.
 
-Diseñada para operar de forma continua en garitas y puntos de control con conectividad nula o intermitente, priorizando velocidad de registro, integridad de auditoría y privacidad de datos en el dispositivo.
-
----
-
-## Tabla de Contenidos
-
-- [Problema y Propuesta de Valor](#problema-y-propuesta-de-valor)
-- [Arquitectura del Sistema](#arquitectura-del-sistema)
-- [Flujo Operativo y de Seguridad](#flujo-operativo-y-de-seguridad)
-- [Modelo de Datos (Room v17)](#modelo-de-datos-room-v17)
-- [Decisiones Técnicas](#decisiones-técnicas)
-- [Seguridad y Privacidad](#seguridad-y-privacidad)
-- [Inicio Rápido y Modo Demo](#inicio-rápido-y-modo-demo)
-- [Pruebas y Calidad](#pruebas-y-calidad)
-- [Diagramas de Referencia](#diagramas-de-referencia)
-- [Roadmap Técnico](#roadmap-técnico)
+Está pensada para un guardia en garita, con el teléfono en una mano, poca luz y fila de autos: pocas pantallas, una acción principal por pantalla, autocompletado desde el directorio y cero dependencia de la red.
 
 ---
 
-## Problema y Propuesta de Valor
+## Contenido
 
-En puntos de control físicos (porterías, estacionamientos, bicicleteros), las planillas en papel o sistemas web dependientes de red fallan cuando cae la señal o aumentan los flujos en hora punta. **Controlate Android** resuelve esto con:
-
-- **Operación Offline-First Real:** Persistencia íntegra en SQLite local (Room) con migraciones explícitas y autocompletado instantáneo desde directorio local.
-- **Trazabilidad por Turno:** Cada ingreso y salida queda sellado con el guardia activo, tipo de turno (`DÍA` / `NOCHE`), `shiftId` y punto de control (`ControlPoint`).
-- **Identidad Visual Dinámica:** Cada punto de control aplica su propia paleta cromática para reducir errores de registro en cambios de garita.
-- **Exportación Autónoma:** Generación local de reportes de turno y resúmenes administrativos en PDF y Excel (`.xlsx`) mediante `FileProvider`.
+- [Funcionalidades](#funcionalidades)
+- [Arquitectura](#arquitectura)
+- [Modelo de datos](#modelo-de-datos)
+- [Decisiones técnicas](#decisiones-técnicas)
+- [Seguridad y privacidad](#seguridad-y-privacidad)
+- [Calidad y pruebas](#calidad-y-pruebas)
+- [Cómo ejecutar](#cómo-ejecutar)
+- [Estructura del proyecto](#estructura-del-proyecto)
+- [Limitaciones conocidas y roadmap](#limitaciones-conocidas-y-roadmap)
 
 ---
 
-## Arquitectura del Sistema
+## Funcionalidades
 
-La aplicación sigue **Clean Architecture + MVVM** con inyección de dependencias mediante **Koin** (`AppModule`):
+| Módulo | Qué permite |
+| :--- | :--- |
+| **Turnos** | El guardia inicia turno (nombre, día/noche, punto de control). Si la app se cierra, retoma el turno abierto. Al cerrarlo, el reporte PDF queda guardado para administración. |
+| **Portería vehicular** | Registro de ingreso con validación de patente y RUT (módulo 11), autocompletado por patente o RUT desde el directorio, búsqueda en el turno y salida con un toque y opción **Deshacer**. |
+| **Bicicletero** | Ingreso por RUT con autocompletado (último registro o directorio), búsqueda por RUT o nombre, salida con **Deshacer** y exportación PDF del turno. |
+| **Panel administrador** | Protegido por PIN. Muestra entradas, salidas y personas dentro del día por punto de control. Incluye resumen PDF, listado de turnos con filtro por fecha y exportación o borrado, y limpieza de datos operativos. |
+| **Directorio** | Búsqueda, edición y eliminación de personas, importación masiva CSV (todo o nada, con errores por línea) y exportación PDF. |
+| **Simulador OS-10** | 60 preguntas aleatorias de un banco local, 60 minutos y aprobación con 70 %. El resultado queda guardado. |
+
+Todo funciona sin conexión. Los reportes se comparten con el selector nativo de Android (`FileProvider`).
+
+---
+
+## Arquitectura
+
+Clean Architecture en tres capas dentro de un único módulo, con MVVM en la presentación e inyección de dependencias con Koin. La dirección de dependencias apunta al dominio: la UI conoce el dominio, el dominio define contratos (`domain/repository`) y la capa de datos los implementa con Room.
 
 ```mermaid
-flowchart TD
-    UI["Capa UI (Activities, BottomSheets, Adapters, ViewBinding)"]
-    VM["ViewModels (StateFlow / LiveData)"]
-    UC["Capa Domain (UseCases: ValidateRegistro, SaveRegistro, MarkExit, SearchPersona, ExportShiftReport)"]
-    REPO["Repositorios (Registro, Bicicleta, Persona)"]
-    DATA["Persistencia & Seguridad (Room AppDatabase v17, SessionManager, SecurityManager)"]
-
-    UI --> VM
+flowchart LR
+    subgraph UI["Presentación (ui/)"]
+        A["Activities / BottomSheets<br/>ViewBinding"] --> VM["ViewModels<br/>StateFlow + eventos"]
+    end
+    subgraph Domain["Dominio (domain/)"]
+        UC["Casos de uso"]
+        V["Validación<br/>Rut, Patente"]
+        R["Contratos<br/>Repositories, ReportExporter"]
+    end
+    subgraph Data["Datos (data/)"]
+        RR["Room*Repository"] --> DAO["DAOs"] --> DB[("SQLite<br/>Room v18")]
+        PDF["PdfReportWriter"]
+        SEC["AdminPinManager<br/>EncryptedSharedPreferences"]
+        SES["SessionManager"]
+    end
     VM --> UC
-    UC --> REPO
-    REPO --> DATA
+    UC --> V
+    UC --> R
+    RR -. implementa .-> R
+    PDF -. implementa .-> R
 ```
 
-### Estructura de Paquetes
+**Patrones aplicados**
 
-```text
-app/src/main/java/com/dur1al/controlate/
-├── App.kt                          # Inicialización de Koin y WorkManager
-├── MainActivity.kt                 # Dashboard principal de portería vehicular
-└── porteria/
-    ├── data/
-    │   ├── ControlPoint.kt         # Puntos de control e identidad visual
-    │   ├── local/
-    │   │   ├── dao/                # RegistroDao, BicicletaDao, PersonaDao
-    │   │   ├── database/           # AppDatabase (Room v17 + SeedCallback)
-    │   │   ├── entities/           # Entidades SQLite
-    │   │   ├── security/           # SecurityManager + PinSecurityHelper (PBKDF2)
-    │   │   └── session/            # SessionManager (SharedPreferences de turno)
-    │   └── repository/             # Repositorios desacoplados
-    ├── di/
-    │   └── AppModule.kt            # Grafo de dependencias Koin
-    ├── domain/
-    │   ├── model/                  # PersonaType, ShiftType, ShiftInfo, Result
-    │   ├── usecase/                # Casos de uso de negocio (ingresos, salidas, reportes)
-    │   └── util/                   # DateFormatter
-    ├── ui/                         # Pantallas MVVM (login, dashboard, bicicletero, admin, db, directory, history, settings)
-    └── utils/                      # ReportManager, RutUtils, SyncManager, PointDisplayHelper
-```
+- **Unidirectional Data Flow:** cada ViewModel expone un `StateFlow<UiState>` inmutable y un canal de eventos de una sola vez (navegación, snackbars). La vista solo renderiza el estado y envía intenciones.
+- **Repository + puertos:** los casos de uso dependen de interfaces, así se prueban con fakes en memoria sin Android.
+- **Use cases:** reglas de negocio (validar, normalizar, registrar, cerrar turno, armar reportes) aisladas de la UI.
+- **Inyección de dependencias:** `dataModule`, `domainModule` y `presentationModule` en Koin; un test verifica que todo el grafo resuelve.
+- **Reloj inyectable (`Clock`):** toda lógica temporal es determinista en tests.
 
----
-
-## Flujo Operativo y de Seguridad
+Flujo de registro de un ingreso vehicular:
 
 ```mermaid
 sequenceDiagram
-    actor Guardia
-    participant Login as LoginActivity
-    participant Sec as SecurityManager
-    participant Dash as Dashboard / Bicicletero
-    participant UC as Domain UseCases
-    participant DB as Room (AppDatabase)
+    actor G as Guardia
+    participant S as VehicleEntrySheet
+    participant VM as PorteriaViewModel
+    participant UC as RegisterVehicleEntryUseCase
+    participant VR as VehicleEntryRepository
+    participant PR as PersonaRepository
 
-    Guardia->>Login: Ingresa nombre, turno y punto de control
-    alt Acceso Operativo
-        Login->>Dash: Inicia sesión de turno (SessionManager)
-        Guardia->>Dash: Busca patente o RUT
-        Dash->>DB: Consulta PersonaDao (autocompletado)
-        Guardia->>Dash: Registra ingreso / salida
-        Dash->>UC: ValidateRegistroUseCase -> SaveRegistroUseCase / MarkExitUseCase
-        UC->>DB: Persiste sello de turno y timestamp
-    else Vista Administrador
-        Login->>Sec: Verifica si existe PIN configurado
-        alt Primer uso
-            Login->>Sec: Define PIN (hash PBKDF2WithHmacSHA256 + salt)
-        else PIN configurado
-            Login->>Sec: Valida PIN (bloqueo 30s tras 5 fallos)
-        end
-        Sec-->>Login: Acceso autorizado a AdminActivity / Reportes / DB
+    G->>S: Escribe patente
+    S->>VM: lookupPlate(patente)
+    VM-->>S: FormEvent.Autofill(persona)
+    G->>S: Registrar ingreso
+    S->>VM: register(input)
+    VM->>UC: invoke(shiftId, input)
+    UC->>UC: validar + normalizar (Patente, Rut)
+    alt datos inválidos
+        UC-->>VM: Invalid(errores por campo)
+        VM-->>S: formErrors
+    else válido
+        UC->>VR: insert(registro con entradaAt)
+        UC->>PR: si no existe por RUT ni patente, insertIfAbsent
+        UC-->>VM: Saved(id)
+        VM-->>S: FormEvent.Saved
+        VR-->>VM: Flow emite la lista actualizada
     end
 ```
 
+El detalle de capas, decisiones (ADRs) y la estrategia de migración está en [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
 ---
 
-## Modelo de Datos (Room v17)
+## Modelo de datos
+
+Base Room versión 18. Los instantes se guardan como **epoch millis**; fecha y hora visibles se derivan al mostrar. `turnos` es la raíz de agregación: cada registro pertenece a un turno (FK con `ON DELETE CASCADE`).
 
 ```mermaid
 erDiagram
-    PERSONA {
+    TURNOS ||--o{ REGISTROS_INGRESO : "agrupa"
+    TURNOS ||--o{ REGISTROS_BICICLETA : "agrupa"
+
+    TURNOS {
+        long id PK
+        string guardia
+        string controlPoint "porteria_2..bicicletero_2"
+        string tipo "DAY | NIGHT"
+        string fecha "yyyy-MM-dd"
+        long iniciadoAt
+        long finalizadoAt "null = abierto"
+    }
+    REGISTROS_INGRESO {
+        long id PK
+        long shiftId FK
+        string patente "idx"
+        string nombreApellido
+        string rut "canónico, nullable"
+        string departamento
+        string descripcionAuto
+        string empresa
+        string tipoPersona "VISITA | ESTUDIANTE | ..."
+        string observaciones
+        string padron
+        boolean esPadron
+        long entradaAt "idx"
+        long salidaAt
+    }
+    REGISTROS_BICICLETA {
+        long id PK
+        long shiftId FK
+        string rut "idx"
+        string nombre
+        string carrera
+        string tipoPersona
+        string observacion
+        long entradaAt "idx"
+        long salidaAt
+    }
+    PERSONAS {
         int id PK
-        string patente
+        string patente UK
         string nombreApellido
         string departamento
         string descripcionAuto
         string empresa
-        string rut
+        string rut "idx"
         string tipoPersona
+        string padron
     }
-
-    REGISTRO_INGRESO {
+    EXAMEN_PREGUNTAS {
         int id PK
-        long shiftId
-        string patente
-        string nombreApellido
-        string rut
-        string departamento
-        string tipoPersona
-        string controlPoint
-        string guardiaTurno
-        string turnoTipo
-        long horaEntrada
-        long horaSalida
+        string pregunta UK
+        string opcionA
+        string opcionB
+        string opcionC
+        string opcionD
+        int respuestaCorrecta
+        string categoria
+        string explicacion
     }
-
-    REGISTRO_BICICLETA {
-        int id PK
-        long shiftId
-        string rut
-        string nombreApellido
-        string carrera
-        string controlPoint
-        string guardiaTurno
-        string turnoTipo
-        long horaEntrada
-        long horaSalida
+    EXAMEN_RESULTADOS {
+        long id PK
+        string guardiaNombre
+        long realizadoAt
+        int puntaje
+        int totalPreguntas
+        float porcentaje
+        boolean aprobado
+        long tiempoEmpleadoSegundos
     }
 ```
 
+`personas` y las tablas de examen no tienen relación con los turnos: el directorio se vincula a los registros por valor (patente/RUT) solo para autocompletar. El esquema exportado vive en [`app/schemas/`](app/schemas/).
+
 ---
 
-## Decisiones Técnicas
+## Decisiones técnicas
 
-| Tecnología | Uso en el proyecto | Por qué se eligió |
+| Tecnología | Uso | Motivo |
 | :--- | :--- | :--- |
-| **Room + KSP** | Base de datos SQLite local (`v17`) | Seguridad en tiempo de compilación para queries SQL, migraciones explícitas y soporte reactivo con `Flow`. |
-| **Koin** | Inyección de dependencias | Configuración declarativa en Kotlin puro sin generación pesada de código ni boilerplate excesivo en proyectos medianos. |
-| **EncryptedSharedPreferences** | Almacenamiento de hash de PIN | Cifrado `AES256_SIV` / `AES256_GCM` respaldado por Android Keystore. |
-| **PBKDF2WithHmacSHA256** | Derivación de PIN administrativo | Salt aleatorio de 16 bytes + 100.000 iteraciones y comparación en tiempo constante (`MessageDigest.isEqual`). |
-| **Coroutines & StateFlow** | Concurrencia y estado UI | Cancelación estructurada vinculada a `viewModelScope` y actualización reactiva de métricas. |
-| **Apache POI + PdfDocument** | Exportación de reportes | Generación de reportes `.xlsx` y PDF directamente en dispositivo sin depender de servidores externos. |
-| **WorkManager** | Tareas diferidas | Base preparada para sincronización resiliente cuando exista conectividad (`SyncManager`). |
-
-Para el detalle completo de decisiones arquitectónicas (ADRs), revisa [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+| **Room 2.6 + KSP** | Persistencia local, `Flow` reactivo | Consultas verificadas en compilación, migraciones explícitas y esquema exportado y testeado. |
+| **Koin 3.5** | DI | DSL en Kotlin puro sin generación de código; el grafo se valida con un test. |
+| **Coroutines + StateFlow** | Concurrencia y estado de UI | Cancelación estructurada con `viewModelScope` y recolección consciente del ciclo de vida (`repeatOnLifecycle`). |
+| **java.time** | Fechas y horas | Inmutable y thread-safe, a diferencia de `SimpleDateFormat`. Disponible desde la API 26. |
+| **android.graphics.pdf** | Reportes PDF | Sin dependencias externas; el contenido (`ReportDocument`) se arma en el dominio y se dibuja en `data/report`. |
+| **EncryptedSharedPreferences** | Hash del PIN admin | Cifrado AES-256 con llave en Android Keystore. |
+| **Robolectric + room-testing** | Tests de DAOs y migraciones en la JVM | Verifican SQL real sin emulador, también en CI. |
 
 ---
 
-## Seguridad y Privacidad
+## Seguridad y privacidad
 
-- **Cero secretos en el código:** No existen PINs por defecto hardcodeados; el PIN administrativo se configura en el primer ingreso.
-- **Datos 100% sintéticos:** El archivo `res/raw/seed_personas.json` contiene únicamente registros ficticios de demostración.
-- **Sin backups automáticos en la nube:** `android:allowBackup="false"` más reglas explícitas en `backup_rules.xml` y `data_extraction_rules.xml` protegen `controlate_secure_prefs.xml`, `porteria_prefs.xml` y `porteria_db`.
-- **Minificación en Release:** `isMinifyEnabled = true` y `isShrinkResources = true` con reglas ProGuard/R8 configuradas.
+- **Sin credenciales por defecto.** El PIN de administrador se define en el primer acceso y se guarda como hash `PBKDF2WithHmacSHA256` (100 000 iteraciones y salt de 16 bytes), cifrado en `EncryptedSharedPreferences`. La comparación es en tiempo constante. Tras 5 intentos fallidos el acceso se bloquea 30 s. La derivación corre fuera del hilo principal.
+- **Datos fuera de los respaldos.** `allowBackup="false"` más reglas explícitas que excluyen la base (incluidos `-wal`/`-shm`), las preferencias y la carpeta `reports/` tanto del respaldo en la nube como de la transferencia entre dispositivos (Android 12+).
+- **Mínimo privilegio al compartir.** `FileProvider` expone solo `files/reports/`.
+- **Entradas validadas y SQL parametrizado.** El RUT se valida con módulo 11 y la patente con su formato. Las búsquedas usan `instr()`, así que `%` y `_` no actúan como comodines.
+- **Sin logs de datos personales.** El código de producción no escribe en Logcat.
+- **Datos semilla 100 % sintéticos** (`res/raw/`).
+- **Release minificado** con R8 (`isMinifyEnabled` + `isShrinkResources`).
 
-Consulta la política completa en [SECURITY.md](SECURITY.md).
+Política completa y reporte de vulnerabilidades en [SECURITY.md](SECURITY.md).
 
 ---
 
-## Inicio Rápido y Modo Demo
+## Calidad y pruebas
 
-### Requisitos
-- **Android Studio** Koala o superior
-- **JDK 17**
-- **Android SDK:** `minSdk = 26` (Android 8.0), `compileSdk = 36`
+```bash
+./gradlew testDebugUnitTest   # dominio, ViewModels, Room (Robolectric), migración y grafo DI
+./gradlew lintDebug           # abortOnError = true
+./gradlew assembleDebug
+```
 
-### Compilación y Ejecución
+| Capa | Qué se prueba |
+| :--- | :--- |
+| Dominio | Validación de RUT y patente, parser CSV, casos de uso de turno, ingreso, salida, estadísticas, reportes y examen (con fakes y reloj controlado). |
+| Datos | DAOs sobre SQLite real: agregados por punto, cascada de borrado, FK, búsqueda literal, salidas idempotentes, carga semilla idempotente. Migración 17→18 con datos heredados, incluido un turno nocturno que cruza medianoche. |
+| Seguridad | Hash de PIN, bloqueo por intentos, cambio de PIN. |
+| Presentación | ViewModels: estados, errores de formulario, deshacer salida, cierre de turno con y sin fallo del reporte, temporizador del examen con tiempo virtual. |
+| DI | Todo ViewModel se resuelve desde el grafo Koin. |
+
+GitHub Actions ejecuta tests, lint y build en cada push o PR a `main`, valida el Gradle wrapper y publica los reportes como artefacto. Dependabot propone actualizaciones semanales.
+
+---
+
+## Cómo ejecutar
+
+**Requisitos:** Android Studio (Koala o superior) y JDK 17. El proyecto usa `compileSdk 36` y `minSdk 26`.
+
 ```bash
 git clone https://github.com/dur1al/controlate-android.git
 cd controlate-android
 ./gradlew assembleDebug
 ```
 
-1. Abre el proyecto en **Android Studio** y sincroniza Gradle.
-2. Ejecuta la app en un emulador o dispositivo físico (`minSdk 26`).
-3. En la primera ejecución, Room precarga automáticamente el directorio demo (`seed_personas.json`).
-4. Al pulsar **Vista Admin** por primera vez, la app solicitará definir un **PIN numérico de 4 a 8 dígitos**.
+1. Abre el proyecto en Android Studio y ejecútalo en un emulador o dispositivo.
+2. En la primera ejecución se cargan un directorio demo y el banco de preguntas OS-10, ambos sintéticos.
+3. Inicia un turno con cualquier nombre. Para ver el panel, pulsa **Vista Admin** y define un PIN de 4 a 8 dígitos.
 
 ---
 
-## Pruebas y Calidad
+## Estructura del proyecto
 
-```bash
-# Tests unitarios JVM (lógica de negocio, validadores, hashing PBKDF2, RUT)
-./gradlew testDebugUnitTest --console=plain
-
-# Análisis estático Android Lint
-./gradlew lintDebug --console=plain
-
-# Compilación Debug
-./gradlew assembleDebug --console=plain
+```text
+app/src/main/java/com/dur1al/controlate/
+├── App.kt                         # Koin + carga semilla en segundo plano
+└── porteria/
+    ├── di/                        # dataModule, domainModule, presentationModule
+    ├── domain/
+    │   ├── model/                 # ControlPoint, PersonaType, ShiftType, entradas, errores de validación
+    │   ├── validation/            # Rut, Patente
+    │   ├── usecase/               # Turnos, ingresos, salidas, estadísticas, reportes, examen
+    │   ├── repository/            # Contratos de persistencia
+    │   ├── report/                # ReportDocument, ReportExporter
+    │   ├── importer/              # PersonaCsvParser
+    │   └── time/                  # TimeFormat, Clock
+    ├── data/
+    │   ├── local/                 # Room (entities, dao, database, migraciones, seeder), sesión, seguridad
+    │   ├── repository/            # Implementaciones Room
+    │   └── report/                # PdfReportWriter, ReportStore
+    └── ui/                        # login, porteria, bicicletero, admin, db, settings, examen, common
 ```
 
-El flujo de CI en GitHub Actions (`.github/workflows/android.yml`) ejecuta automáticamente `testDebugUnitTest`, `lintDebug` y `assembleDebug` en cada push o pull request.
+---
+
+## Limitaciones conocidas y roadmap
+
+- **Un dispositivo por punto de control:** no hay sincronización entre equipos ni respaldo remoto (decisión offline-first).
+- **Base sin cifrar en reposo:** protegida por el sandbox de Android; evaluar SQLCipher si el contexto lo exige.
+- **Versiones de dependencias:** Kotlin 1.9 y AndroidX de 2024. Su actualización (Kotlin 2.x, Room 2.7+) queda delegada a Dependabot con PRs separados. Además, `security-crypto` figura como deprecado en las versiones recientes de AndroidX y conviene planificar su reemplazo (Keystore + Tink).
+- **Próximos pasos:** desbloqueo biométrico para el admin, lectura OCR de patentes con ML Kit y migración incremental a Jetpack Compose.
 
 ---
 
-## Diagramas de Referencia
-
-Además de los diagramas Mermaid integrados arriba, la carpeta `diagramas/` incluye diagramas visuales complementarios:
-- [Contexto Funcional](diagramas/contexto%20funcional.png)
-- [Diagrama de Paquetes](diagramas/paquetes.png)
-- [Diagrama de Clases](diagramas/clases.png)
-- [Diagrama de Flujo](diagramas/flujo.png)
-- [Diagrama de Secuencia](diagramas/secuencia.png)
-- [Diagrama Entidad-Relación](diagramas/entidad%20relacion.png)
-
----
-
-## Roadmap Técnico
-
-- [ ] **Desbloqueo biométrico:** Integración opcional con `BiometricPrompt` para acceso administrativo rápido en dispositivos compatibles.
-- [ ] **Lectura OCR de patentes:** Escaneo asistido en cámara con ML Kit Text Recognition en modo offline.
-- [ ] **Cifrado de base de datos en reposo:** Evaluación de SQLCipher sobre Room para entornos de alta exigencia.
-- [ ] **Migración progresiva a Jetpack Compose:** Adopción incremental en nuevas pantallas manteniendo la capa `domain` intacta.
+Proyecto personal de portafolio. Los datos incluidos son ficticios.

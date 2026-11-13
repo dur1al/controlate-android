@@ -1,151 +1,108 @@
 package com.dur1al.controlate.porteria.ui.bicicletero
 
+import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.os.Bundle
-import android.util.Log
-import android.widget.Toast
-import androidx.activity.viewModels
+import android.view.Menu
+import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
-import androidx.core.widget.doOnTextChanged
-import androidx.lifecycle.lifecycleScope
+import androidx.core.widget.doAfterTextChanged
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.snackbar.Snackbar
-import com.dur1al.controlate.App
 import com.dur1al.controlate.R
 import com.dur1al.controlate.databinding.ActivityBicicleteroDashboardBinding
-import com.dur1al.controlate.porteria.data.local.entities.RegistroBicicleta
-import com.dur1al.controlate.porteria.data.local.session.SessionManager
+import com.dur1al.controlate.porteria.domain.model.ControlPoint
+import com.dur1al.controlate.porteria.ui.common.collectWhenStarted
+import com.dur1al.controlate.porteria.ui.common.colorRes
+import com.dur1al.controlate.porteria.ui.common.labelRes
+import com.dur1al.controlate.porteria.ui.common.shareReport
 import com.dur1al.controlate.porteria.ui.login.LoginActivity
-import com.dur1al.controlate.porteria.utils.ExportResult
-import com.dur1al.controlate.porteria.utils.ReportManager
-import com.dur1al.controlate.porteria.utils.RutUtils
-import com.dur1al.controlate.porteria.utils.applyRutFormatter
-import com.dur1al.controlate.porteria.domain.util.DateFormatter
-import kotlinx.coroutines.launch
-import android.view.Menu
-import android.view.MenuItem
-
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
+/** Bitácora del bicicletero: registros del turno, búsqueda por RUT o nombre y salida con deshacer. */
 class BicicleteroDashboardActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityBicicleteroDashboardBinding
     private val viewModel: BicicleteroViewModel by viewModel()
-    private lateinit var reportManager: ReportManager
-    private lateinit var sessionManager: SessionManager
-    private var currentShiftRegistros: List<RegistroBicicleta> = emptyList()
+    private val adapter = BicicletaAdapter(onExitClick = { viewModel.markExit(it) })
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityBicicleteroDashboardBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        reportManager = ReportManager(this)
-        sessionManager = SessionManager(this)
-        applyGreenThemeByPoint()
         setSupportActionBar(binding.toolbar)
-
-        binding.etSearch.applyRutFormatter()
-
-        val adapter = BicicletaAdapter { registro ->
-            if (registro.horaSalida == null) {
-                val horaSalida = DateFormatter.nowTime()
-                viewModel.actualizarRegistro(registro.copy(horaSalida = horaSalida))
-                
-                Snackbar.make(binding.root, R.string.exit_registered, Snackbar.LENGTH_SHORT).show()
-            }
-        }
 
         binding.rvBicicletas.layoutManager = LinearLayoutManager(this)
         binding.rvBicicletas.adapter = adapter
+        binding.etSearch.doAfterTextChanged { viewModel.setQuery(it?.toString().orEmpty()) }
+        binding.btnNuevo.setOnClickListener { BikeEntrySheet().show(supportFragmentManager, BikeEntrySheet.TAG) }
+        binding.btnEndShift.setOnClickListener { confirmEndShift() }
 
-        binding.etSearch.doOnTextChanged { text, _, _, _ ->
-            val query = RutUtils.cleanRut(text.toString())
-            val filtrada = if (query.isEmpty()) currentShiftRegistros else currentShiftRegistros.filter { it.rut.contains(query, ignoreCase = true) }
-            adapter.submitList(filtrada)
+        collectWhenStarted(viewModel.state) { state ->
+            state.turno?.let { applyPoint(ControlPoint.fromId(it.controlPoint) ?: ControlPoint.BICICLETERO_1) }
+            adapter.submitList(state.registros)
+            val empty = !state.loading && state.registros.isEmpty()
+            binding.emptyStateLayout.isVisible = empty
+            binding.rvBicicletas.isVisible = !empty
+            binding.btnEndShift.isEnabled = !state.busy
         }
-
-        viewModel.getRegistrosByShift(sessionManager.getShiftId()).observe(this) { registros ->
-            currentShiftRegistros = registros
-            val query = RutUtils.cleanRut(binding.etSearch.text?.toString().orEmpty())
-            val filtrada = if (query.isEmpty()) registros else registros.filter { it.rut.contains(query, ignoreCase = true) }
-            adapter.submitList(filtrada)
-            binding.emptyStateLayout.isVisible = filtrada.isEmpty()
-            binding.rvBicicletas.isVisible = filtrada.isNotEmpty()
-        }
-
-        binding.btnNuevo.setOnClickListener {
-            BicicletaBottomSheet().show(supportFragmentManager, BicicletaBottomSheet.TAG)
-        }
-
-        binding.btnEndShift.setOnClickListener {
-            MaterialAlertDialogBuilder(this)
-                .setTitle(R.string.end_shift_title)
-                .setMessage(R.string.end_shift_bike_message)
-                .setPositiveButton(R.string.dialog_yes_finish) { _, _ -> endShiftAndReturnToLogin() }
-                .setNegativeButton(R.string.dialog_no, null)
-                .show()
-        }
-    }
-
-    private fun applyGreenThemeByPoint() {
-        val isBici2 = sessionManager.getPorteriaName().contains("Bicicletero 2", ignoreCase = true)
-        val primaryColor = ContextCompat.getColor(this, if (isBici2) R.color.bicicletero2_primary else R.color.bicicletero2_variant)
-        binding.headerLayout.setBackgroundColor(primaryColor)
-        binding.toolbar.setBackgroundColor(primaryColor)
-        binding.btnNuevo.backgroundTintList = ColorStateList.valueOf(primaryColor)
-    }
-
-    private fun endShiftAndReturnToLogin() {
-        lifecycleScope.launch {
-            Log.d("Bicicletero", "Exportando registros finales: ${currentShiftRegistros.size}")
-            val result = reportManager.generateBicicletaReportExcel(
-                registros = currentShiftRegistros,
-                guardiaName = sessionManager.getGuardiaName().ifBlank { "No registrado" },
-                turnoTipo = sessionManager.getTurnoTipo(),
-                shareAfterSave = false
-            )
-            
-            if (result is ExportResult.Error) {
-                Log.e("Bicicletero", "Error al exportar reporte final: ${result.message}")
+        collectWhenStarted(viewModel.events) { event ->
+            when (event) {
+                BicicleteroViewModel.Event.NoActiveShift, BicicleteroViewModel.Event.ShiftEnded -> goToLogin()
+                is BicicleteroViewModel.Event.ExitMarked ->
+                    Snackbar.make(binding.root, getString(R.string.exit_registered_for, event.nombre), Snackbar.LENGTH_LONG)
+                        .setAction(R.string.action_undo) { viewModel.undoExit(event.id, event.at) }
+                        .show()
+                is BicicleteroViewModel.Event.Share ->
+                    if (!shareReport(event.file)) {
+                        Snackbar.make(binding.root, R.string.share_report_unavailable, Snackbar.LENGTH_LONG).show()
+                    }
+                is BicicleteroViewModel.Event.Message ->
+                    Snackbar.make(binding.root, event.message.resolve(this), Snackbar.LENGTH_SHORT).show()
             }
-
-            sessionManager.endShift()
-            val intent = Intent(this@BicicleteroDashboardActivity, LoginActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            }
-            startActivity(intent)
-            finish()
         }
     }
 
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+    private fun applyPoint(point: ControlPoint) {
+        val color = ContextCompat.getColor(this, point.colorRes)
+        binding.headerLayout.setBackgroundColor(color)
+        binding.toolbar.setBackgroundColor(color)
+        binding.toolbar.subtitle = getString(point.labelRes)
+        binding.btnNuevo.backgroundTintList = ColorStateList.valueOf(color)
+    }
+
+    private fun confirmEndShift() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.end_shift_title)
+            .setMessage(R.string.end_shift_bike_message)
+            .setPositiveButton(R.string.dialog_yes_finish) { _, _ -> viewModel.endShift() }
+            .setNegativeButton(R.string.dialog_no, null)
+            .show()
+    }
+
+    private fun goToLogin() {
+        startActivity(Intent(this, LoginActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK))
+        finish()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_bicicletero, menu)
         return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == R.id.action_exportar) {
-            lifecycleScope.launch {
-                val result = reportManager.generateBicicletaReportExcel(
-                    registros = currentShiftRegistros,
-                    guardiaName = sessionManager.getGuardiaName().ifBlank { "No registrado" },
-                    turnoTipo = sessionManager.getTurnoTipo(),
-                    shareAfterSave = true
-                )
-                when(result) {
-                    is ExportResult.Success -> Snackbar.make(binding.root, R.string.export_generated_saved, Snackbar.LENGTH_SHORT).show()
-                    is ExportResult.Error -> Snackbar.make(binding.root, getString(R.string.bici_export_error, result.message), Snackbar.LENGTH_LONG).show()
-                    is ExportResult.EmptyData -> Snackbar.make(binding.root, R.string.bici_export_empty, Snackbar.LENGTH_SHORT).show()
-                }
-            }
+            viewModel.exportCurrentShift()
             return true
         }
         return super.onOptionsItemSelected(item)
     }
-}
 
+    companion object {
+        fun intent(context: Context) = Intent(context, BicicleteroDashboardActivity::class.java)
+    }
+}

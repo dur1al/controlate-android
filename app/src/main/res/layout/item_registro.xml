@@ -46,7 +46,7 @@
                     android:layout_marginStart="8dp"
                     android:paddingHorizontal="8dp"
                     android:paddingVertical="4dp"
-                    android:textSize="10sp"
+                    android:textSize="11sp"
                     android:textStyle="bold"
                     tools:background="@drawable/bg_status_inside"
                     tools:textColor="@color/status_inside_text"
@@ -63,7 +63,7 @@
                     android:paddingHorizontal="10dp"
                     android:paddingVertical="4dp"
                     android:textColor="@color/text_main"
-                    android:textSize="10sp"
+                    android:textSize="11sp"
                     android:textStyle="bold"
                     tools:text="Visita" />
             </LinearLayout>

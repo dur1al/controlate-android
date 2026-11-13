@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Android 11 y anteriores. Redundante con allowBackup="false", se mantiene como defensa en profundidad. -->
 <full-backup-content>
     <exclude domain="sharedpref" path="controlate_secure_prefs.xml" />
     <exclude domain="sharedpref" path="porteria_prefs.xml" />
     <exclude domain="database" path="porteria_db" />
     <exclude domain="database" path="porteria_db-shm" />
     <exclude domain="database" path="porteria_db-wal" />
+    <exclude domain="file" path="reports/" />
 </full-backup-content>

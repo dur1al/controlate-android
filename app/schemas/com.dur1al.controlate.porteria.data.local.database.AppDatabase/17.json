@@ -1,0 +1,467 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 17,
+    "identityHash": "f8d123c7f98dc952ed79488652da5b19",
+    "entities": [
+      {
+        "tableName": "registros_ingreso",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `porteria` TEXT NOT NULL, `guardiaTurno` TEXT NOT NULL, `fechaTurno` TEXT NOT NULL, `turnoTipo` TEXT NOT NULL, `shiftId` INTEGER NOT NULL, `patente` TEXT NOT NULL, `nombreApellido` TEXT NOT NULL, `rut` TEXT, `departamento` TEXT NOT NULL, `descripcionAuto` TEXT NOT NULL, `empresa` TEXT, `tipoPersona` TEXT, `observaciones` TEXT, `horaEntrada` TEXT NOT NULL, `fechaEntrada` TEXT NOT NULL, `horaSalida` TEXT, `padron` TEXT, `esPadron` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "porteria",
+            "columnName": "porteria",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "guardiaTurno",
+            "columnName": "guardiaTurno",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fechaTurno",
+            "columnName": "fechaTurno",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "turnoTipo",
+            "columnName": "turnoTipo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "shiftId",
+            "columnName": "shiftId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "patente",
+            "columnName": "patente",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nombreApellido",
+            "columnName": "nombreApellido",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rut",
+            "columnName": "rut",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "departamento",
+            "columnName": "departamento",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "descripcionAuto",
+            "columnName": "descripcionAuto",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "empresa",
+            "columnName": "empresa",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "tipoPersona",
+            "columnName": "tipoPersona",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "observaciones",
+            "columnName": "observaciones",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "horaEntrada",
+            "columnName": "horaEntrada",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fechaEntrada",
+            "columnName": "fechaEntrada",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "horaSalida",
+            "columnName": "horaSalida",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "padron",
+            "columnName": "padron",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "esPadron",
+            "columnName": "esPadron",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_registros_ingreso_patente",
+            "unique": false,
+            "columnNames": [
+              "patente"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_registros_ingreso_patente` ON `${TABLE_NAME}` (`patente`)"
+          },
+          {
+            "name": "index_registros_ingreso_shiftId",
+            "unique": false,
+            "columnNames": [
+              "shiftId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_registros_ingreso_shiftId` ON `${TABLE_NAME}` (`shiftId`)"
+          }
+        ],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "personas",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `patente` TEXT NOT NULL, `nombreApellido` TEXT NOT NULL, `departamento` TEXT NOT NULL, `descripcionAuto` TEXT NOT NULL, `empresa` TEXT, `rut` TEXT, `tipoPersona` TEXT, `padron` TEXT)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "patente",
+            "columnName": "patente",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nombreApellido",
+            "columnName": "nombreApellido",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "departamento",
+            "columnName": "departamento",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "descripcionAuto",
+            "columnName": "descripcionAuto",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "empresa",
+            "columnName": "empresa",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "rut",
+            "columnName": "rut",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "tipoPersona",
+            "columnName": "tipoPersona",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "padron",
+            "columnName": "padron",
+            "affinity": "TEXT",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_personas_patente",
+            "unique": true,
+            "columnNames": [
+              "patente"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_personas_patente` ON `${TABLE_NAME}` (`patente`)"
+          }
+        ],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "registros_bicicleta",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `shiftId` INTEGER NOT NULL, `rut` TEXT NOT NULL, `nombre` TEXT NOT NULL, `carrera` TEXT NOT NULL, `tipoPersona` TEXT NOT NULL, `controlPoint` TEXT NOT NULL, `observacionBicicleta` TEXT, `fecha` TEXT NOT NULL, `horaEntrada` TEXT NOT NULL, `horaSalida` TEXT, `estado` TEXT NOT NULL, `guardiaTurno` TEXT NOT NULL, `turnoTipo` TEXT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "shiftId",
+            "columnName": "shiftId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rut",
+            "columnName": "rut",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nombre",
+            "columnName": "nombre",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "carrera",
+            "columnName": "carrera",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tipoPersona",
+            "columnName": "tipoPersona",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "controlPoint",
+            "columnName": "controlPoint",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "observacionBicicleta",
+            "columnName": "observacionBicicleta",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "fecha",
+            "columnName": "fecha",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "horaEntrada",
+            "columnName": "horaEntrada",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "horaSalida",
+            "columnName": "horaSalida",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "estado",
+            "columnName": "estado",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "guardiaTurno",
+            "columnName": "guardiaTurno",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "turnoTipo",
+            "columnName": "turnoTipo",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "examen_preguntas",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `pregunta` TEXT NOT NULL, `opcionA` TEXT NOT NULL, `opcionB` TEXT NOT NULL, `opcionC` TEXT NOT NULL, `opcionD` TEXT NOT NULL, `respuestaCorrecta` INTEGER NOT NULL, `categoria` TEXT NOT NULL, `explicacion` TEXT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pregunta",
+            "columnName": "pregunta",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "opcionA",
+            "columnName": "opcionA",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "opcionB",
+            "columnName": "opcionB",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "opcionC",
+            "columnName": "opcionC",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "opcionD",
+            "columnName": "opcionD",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "respuestaCorrecta",
+            "columnName": "respuestaCorrecta",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "categoria",
+            "columnName": "categoria",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "explicacion",
+            "columnName": "explicacion",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "examen_resultados",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `guardiaNombre` TEXT NOT NULL, `fecha` TEXT NOT NULL, `puntaje` INTEGER NOT NULL, `totalPreguntas` INTEGER NOT NULL, `porcentaje` REAL NOT NULL, `aprobado` INTEGER NOT NULL, `tiempoEmpleadoSegundos` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "guardiaNombre",
+            "columnName": "guardiaNombre",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fecha",
+            "columnName": "fecha",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "puntaje",
+            "columnName": "puntaje",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "totalPreguntas",
+            "columnName": "totalPreguntas",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "porcentaje",
+            "columnName": "porcentaje",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "aprobado",
+            "columnName": "aprobado",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tiempoEmpleadoSegundos",
+            "columnName": "tiempoEmpleadoSegundos",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'f8d123c7f98dc952ed79488652da5b19')"
+    ]
+  }
+}

@@ -1,122 +1,102 @@
 package com.dur1al.controlate.porteria.ui.db
 
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.widget.doOnTextChanged
+import androidx.core.view.isVisible
+import androidx.core.widget.doAfterTextChanged
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.snackbar.Snackbar
-import com.dur1al.controlate.App
+import com.dur1al.controlate.R
 import com.dur1al.controlate.databinding.ActivityAdminDirectoryBinding
 import com.dur1al.controlate.databinding.BottomSheetEntradaBinding
 import com.dur1al.controlate.porteria.data.local.entities.Persona
-import com.dur1al.controlate.porteria.ui.dashboard.DashboardViewModel
-import com.dur1al.controlate.porteria.utils.RutUtils
-import com.dur1al.controlate.porteria.utils.applyRutFormatter
+import com.dur1al.controlate.porteria.domain.model.PersonaType
+import com.dur1al.controlate.porteria.domain.validation.Rut
+import com.dur1al.controlate.porteria.ui.common.applyRutFormatter
+import com.dur1al.controlate.porteria.ui.common.collectWhenStarted
+import com.dur1al.controlate.porteria.ui.common.textTrimmed
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
+/** Directorio editable (admin): tocar para editar, mantener presionado para eliminar. */
 class AdminDirectoryActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityAdminDirectoryBinding
-    private val viewModel: DashboardViewModel by viewModel()
-    private lateinit var adapter: PersonaAdapter
+    private val viewModel: DirectoryViewModel by viewModel()
+    private val adapter = PersonaAdapter(onEdit = ::showEditDialog, onDelete = ::confirmDelete)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityAdminDirectoryBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        setupToolbar()
-        setupRecyclerView()
-        setupListeners()
-        observeData()
-    }
-
-    private fun setupToolbar() {
         binding.toolbar.setNavigationOnClickListener { finish() }
-    }
-
-    private fun setupRecyclerView() {
-        adapter = PersonaAdapter(
-            onEdit = { persona -> showEditPersonaDialog(persona) },
-            onDelete = { persona -> showDeleteConfirmDialog(persona) }
-        )
+        binding.fabImport.isVisible = false
         binding.rvDirectory.layoutManager = LinearLayoutManager(this)
         binding.rvDirectory.adapter = adapter
-    }
+        binding.etSearch.doAfterTextChanged { viewModel.setQuery(it?.toString().orEmpty()) }
 
-    private fun setupListeners() {
-        binding.etSearch.doOnTextChanged { text, _, _, _ ->
-            viewModel.updateDbSearchQuery(text.toString())
+        collectWhenStarted(viewModel.results) { list ->
+            adapter.submitList(list.orEmpty())
+            binding.tvEmpty.isVisible = list != null && list.isEmpty()
         }
-
-        binding.fabImport.visibility = View.GONE // Movido a DatabaseManager
-    }
-
-    private fun observeData() {
-        viewModel.filteredPersonas.observe(this) { list ->
-            adapter.submitList(list)
-            binding.tvEmpty.visibility = if (list.isNullOrEmpty()) View.VISIBLE else View.GONE
+        collectWhenStarted(viewModel.events) { event ->
+            if (event is DirectoryViewModel.Event.Message) {
+                Snackbar.make(binding.root, event.message.resolve(this), Snackbar.LENGTH_SHORT).show()
+            }
         }
     }
 
-    private fun showEditPersonaDialog(persona: Persona) {
-        val dialogBinding = BottomSheetEntradaBinding.inflate(LayoutInflater.from(this))
-
-        // Rellenar datos actuales
-        dialogBinding.apply {
+    private fun showEditDialog(persona: Persona) {
+        val form = BottomSheetEntradaBinding.inflate(layoutInflater).apply {
+            tvTitle.setText(R.string.directory_edit_title)
+            btnGuardar.isVisible = false
+            cbEsPadron.isVisible = false
+            tilPadron.isVisible = !persona.padron.isNullOrBlank()
             etRut.applyRutFormatter()
             etPatente.setText(persona.patente)
             etNombre.setText(persona.nombreApellido)
             etDepto.setText(persona.departamento)
-            etEmpresa.setText(persona.empresa ?: "")
-            etRut.setText(persona.rut ?: "")
-            etPadron.setText(persona.padron ?: "")
+            etEmpresa.setText(persona.empresa)
+            etRut.setText(persona.rut?.let(Rut::format))
+            etPadron.setText(persona.padron)
             etAuto.setText(persona.descripcionAuto)
-
-            when(persona.tipoPersona) {
-                "Visita" -> rbVisita.isChecked = true
-                "Estudiante" -> rbEstudiante.isChecked = true
-                "Funcionario" -> rbFuncionario.isChecked = true
+            when (PersonaType.fromCode(persona.tipoPersona)) {
+                PersonaType.ESTUDIANTE -> rbEstudiante.isChecked = true
+                PersonaType.FUNCIONARIO -> rbFuncionario.isChecked = true
+                else -> rbVisita.isChecked = true
             }
         }
-
         MaterialAlertDialogBuilder(this)
-            .setTitle("Editar Registro")
-            .setView(dialogBinding.root)
-            .setPositiveButton("Guardar") { _, _ ->
-                val updatedPersona = persona.copy(
-                    patente = dialogBinding.etPatente.text.toString().uppercase(),
-                    nombreApellido = dialogBinding.etNombre.text.toString(),
-                    departamento = dialogBinding.etDepto.text.toString(),
-                    empresa = dialogBinding.etEmpresa.text.toString(),
-                    rut = RutUtils.cleanRut(dialogBinding.etRut.text.toString()).ifBlank { null },
-                    padron = dialogBinding.etPadron.text.toString(),
-                    descripcionAuto = dialogBinding.etAuto.text.toString(),
-                    tipoPersona = when(dialogBinding.rgTipoPersona.checkedRadioButtonId) {
-                        dialogBinding.rbEstudiante.id -> "Estudiante"
-                        dialogBinding.rbFuncionario.id -> "Funcionario"
-                        else -> "Visita"
-                    }
+            .setView(form.root)
+            .setPositiveButton(R.string.dialog_save) { _, _ ->
+                viewModel.update(
+                    persona.copy(
+                        patente = form.etPatente.textTrimmed(),
+                        nombreApellido = form.etNombre.textTrimmed(),
+                        departamento = form.etDepto.textTrimmed(),
+                        empresa = form.etEmpresa.textTrimmed().ifEmpty { null },
+                        rut = form.etRut.textTrimmed(),
+                        padron = form.etPadron.textTrimmed().ifEmpty { null },
+                        descripcionAuto = form.etAuto.textTrimmed(),
+                        tipoPersona = when (form.rgTipoPersona.checkedRadioButtonId) {
+                            form.rbEstudiante.id -> PersonaType.ESTUDIANTE
+                            form.rbFuncionario.id -> PersonaType.FUNCIONARIO
+                            else -> PersonaType.VISITA
+                        }.name
+                    )
                 )
-                viewModel.updatePersona(updatedPersona)
-                Snackbar.make(binding.root, "Registro actualizado", Snackbar.LENGTH_SHORT).show()
             }
-            .setNegativeButton("Cancelar", null)
+            .setNegativeButton(R.string.dialog_cancel, null)
             .show()
     }
 
-    private fun showDeleteConfirmDialog(persona: Persona) {
+    private fun confirmDelete(persona: Persona) {
         MaterialAlertDialogBuilder(this)
-            .setTitle("Eliminar Registro")
-            .setMessage("¿Estás seguro de eliminar a ${persona.nombreApellido}?")
-            .setPositiveButton("Eliminar") { _, _ ->
-                viewModel.deletePersona(persona)
-            }
-            .setNegativeButton("Cancelar", null)
+            .setTitle(R.string.directory_delete_title)
+            .setMessage(getString(R.string.directory_delete_message, persona.nombreApellido))
+            .setPositiveButton(R.string.dialog_delete) { _, _ -> viewModel.delete(persona) }
+            .setNegativeButton(R.string.dialog_cancel, null)
             .show()
     }
 }

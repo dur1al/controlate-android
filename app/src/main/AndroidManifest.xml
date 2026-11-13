@@ -24,56 +24,46 @@
         </activity>
 
         <activity
-            android:name=".MainActivity"
+            android:name=".porteria.ui.porteria.PorteriaActivity"
             android:windowSoftInputMode="adjustResize"
             android:exported="false" />
 
         <activity
             android:name=".porteria.ui.admin.AdminActivity"
             android:exported="false"
-            android:label="Panel Administrador" />
+            android:label="@string/title_admin" />
 
         <activity
             android:name=".porteria.ui.bicicletero.BicicleteroDashboardActivity"
             android:windowSoftInputMode="adjustResize"
             android:exported="false"
-            android:label="Bitacora Bicicletas" />
+            android:label="@string/title_bicicletero" />
 
         <activity
             android:name=".porteria.ui.db.AdminDirectoryActivity"
             android:exported="false"
-            android:label="Gestion de Directorio" />
+            android:label="@string/title_directory_admin" />
 
         <activity
             android:name=".porteria.ui.admin.ShiftReportActivity"
             android:exported="false"
-            android:label="Reportes de Turnos" />
+            android:label="@string/title_reports" />
 
         <activity
             android:name=".porteria.ui.db.DatabaseManagerActivity"
             android:windowSoftInputMode="adjustResize"
             android:exported="false"
-            android:label="Gestion de Base de Datos" />
+            android:label="@string/title_database" />
 
         <activity
             android:name=".porteria.ui.settings.SettingsActivity"
             android:exported="false"
-            android:label="Ajustes" />
-
-        <activity
-            android:name=".porteria.ui.history.HistoryActivity"
-            android:exported="false"
-            android:label="Historial" />
-
-        <activity
-            android:name=".porteria.ui.directory.DirectoryActivity"
-            android:exported="false"
-            android:label="Directorio" />
+            android:label="@string/title_settings" />
 
         <activity
             android:name=".porteria.ui.examen.ExamenActivity"
             android:exported="false"
-            android:label="Examen OS-10" />
+            android:label="@string/title_examen" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

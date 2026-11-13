@@ -38,25 +38,8 @@
         <item name="android:textSize">13sp</item>
     </style>
 
-    <style name="Controlate.Title">
-        <item name="android:fontFamily">@font/nunito</item>
-        <item name="android:textColor">@color/white</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:textSize">30sp</item>
-        <item name="android:letterSpacing">0.03</item>
-    </style>
 
-    <style name="Controlate.SectionLabel">
-        <item name="android:textColor">@color/white</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:textSize">14sp</item>
-    </style>
 
-    <style name="Controlate.HintText">
-        <item name="android:fontFamily">@font/nunito</item>
-        <item name="android:textColor">@color/text_hint</item>
-        <item name="android:textSize">13sp</item>
-    </style>
 
     <style name="Controlate.OutlinedInput" parent="Widget.Material3.TextInputLayout.OutlinedBox">
         <item name="hintTextColor">@color/text_hint</item>
@@ -114,9 +97,4 @@
         <item name="cardCornerRadius">16dp</item>
     </style>
 
-    <style name="Controlate.Toolbar" parent="Widget.Material3.Toolbar">
-        <item name="android:background">@color/surface</item>
-        <item name="titleTextColor">@color/text_main</item>
-        <item name="navigationIconTint">@color/text_main</item>
-    </style>
 </resources>

@@ -1,12 +1,12 @@
 [
-  {"patente":"DEMO01","nombreApellido":"Ana Torres","departamento":"Administración","descripcionAuto":"Sedán Gris","empresa":"","rut":"","tipoPersona":"Funcionario"},
-  {"patente":"DEMO02","nombreApellido":"Carlos Rojas","departamento":"Operaciones","descripcionAuto":"Camioneta Blanca","empresa":"","rut":"","tipoPersona":"Funcionario"},
-  {"patente":"TEST10","nombreApellido":"Lucía Mendoza","departamento":"Ingeniería","descripcionAuto":"","empresa":"","rut":"","tipoPersona":"Estudiante"},
-  {"patente":"TEST11","nombreApellido":"Mateo Silva","departamento":"Arquitectura","descripcionAuto":"","empresa":"","rut":"","tipoPersona":"Estudiante"},
-  {"patente":"PROV20","nombreApellido":"Jorge Paredes","departamento":"Casino Central","descripcionAuto":"Camión Reparto","empresa":"Logística Norte","rut":"","tipoPersona":"Proveedor"},
-  {"patente":"PROV21","nombreApellido":"Elena Vargas","departamento":"Bodega Central","descripcionAuto":"Furgón Blanco","empresa":"Envíos Express","rut":"","tipoPersona":"Proveedor"},
-  {"patente":"VIST30","nombreApellido":"Sofía Navarro","departamento":"Recepción","descripcionAuto":"Hatchback Azul","empresa":"Consultora Sur","rut":"","tipoPersona":"Visita"},
-  {"patente":"VIST31","nombreApellido":"Diego Fuentes","departamento":"Auditoría","descripcionAuto":"","empresa":"","rut":"","tipoPersona":"Visita"},
-  {"patente":"MANT40","nombreApellido":"Roberto Lagos","departamento":"Servicios Generales","descripcionAuto":"Camioneta Utilitaria","empresa":"Mantención Integral","rut":"","tipoPersona":"Contratista"},
-  {"patente":"LABS50","nombreApellido":"Camila Herrera","departamento":"Laboratorios","descripcionAuto":"","empresa":"","rut":"","tipoPersona":"Funcionario"}
+  {"patente": "DEMO01", "nombreApellido": "Ana Torres", "departamento": "Administración", "descripcionAuto": "Sedán Gris", "empresa": null, "rut": null, "tipoPersona": "FUNCIONARIO"},
+  {"patente": "DEMO02", "nombreApellido": "Carlos Rojas", "departamento": "Operaciones", "descripcionAuto": "Camioneta Blanca", "empresa": null, "rut": null, "tipoPersona": "FUNCIONARIO"},
+  {"patente": "TEST10", "nombreApellido": "Lucía Mendoza", "departamento": "Ingeniería", "descripcionAuto": "", "empresa": null, "rut": null, "tipoPersona": "ESTUDIANTE"},
+  {"patente": "TEST11", "nombreApellido": "Mateo Silva", "departamento": "Arquitectura", "descripcionAuto": "", "empresa": null, "rut": null, "tipoPersona": "ESTUDIANTE"},
+  {"patente": "PROV20", "nombreApellido": "Jorge Paredes", "departamento": "Casino Central", "descripcionAuto": "Camión Reparto", "empresa": "Logística Norte", "rut": null, "tipoPersona": "PROVEEDOR"},
+  {"patente": "PROV21", "nombreApellido": "Elena Vargas", "departamento": "Bodega Central", "descripcionAuto": "Furgón Blanco", "empresa": "Envíos Express", "rut": null, "tipoPersona": "PROVEEDOR"},
+  {"patente": "VIST30", "nombreApellido": "Sofía Navarro", "departamento": "Recepción", "descripcionAuto": "Hatchback Azul", "empresa": "Consultora Sur", "rut": null, "tipoPersona": "VISITA"},
+  {"patente": "VIST31", "nombreApellido": "Diego Fuentes", "departamento": "Auditoría", "descripcionAuto": "", "empresa": null, "rut": null, "tipoPersona": "VISITA"},
+  {"patente": "MANT40", "nombreApellido": "Roberto Lagos", "departamento": "Servicios Generales", "descripcionAuto": "Camioneta Utilitaria", "empresa": "Mantención Integral", "rut": null, "tipoPersona": "OTRO"},
+  {"patente": "LABS50", "nombreApellido": "Camila Herrera", "departamento": "Laboratorios", "descripcionAuto": "", "empresa": null, "rut": null, "tipoPersona": "FUNCIONARIO"}
 ]
