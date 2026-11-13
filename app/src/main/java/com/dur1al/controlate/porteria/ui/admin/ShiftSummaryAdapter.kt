@@ -21,6 +21,14 @@ class ShiftSummaryAdapter(
     private val onDelete: (ShiftSummary) -> Unit
 ) : ListAdapter<ShiftSummary, ShiftSummaryAdapter.ViewHolder>(Diff) {
 
+    /** Nombres actuales de los puntos; al cambiar (p. ej. un renombre) se vuelven a dibujar las tarjetas. */
+    var points: Map<String, ControlPoint> = emptyMap()
+        set(value) {
+            if (field == value) return
+            field = value
+            notifyItemRangeChanged(0, itemCount)
+        }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
         ViewHolder(ItemShiftBinding.inflate(LayoutInflater.from(parent.context), parent, false))
 
@@ -30,7 +38,8 @@ class ShiftSummaryAdapter(
 
         fun bind(item: ShiftSummary) = with(binding) {
             val context = root.context
-            val isBike = ControlPoint.fromId(item.controlPoint)?.kind == ControlPoint.Kind.BICICLETERO
+            val kind = points[item.controlPoint.trim().lowercase()]?.kind ?: ControlPoint.Kind.fromId(item.controlPoint)
+            val isBike = kind == ControlPoint.Kind.BICICLETERO
             tvReportType.setText(if (isBike) R.string.report_type_bicicletero else R.string.report_type_porteria)
             tvReportType.setBackgroundColor(
                 ContextCompat.getColor(context, if (isBike) R.color.bicicletero2_primary else R.color.primary)
@@ -38,7 +47,7 @@ class ShiftSummaryAdapter(
             tvRecordCount.text = context.getString(R.string.report_closed_count, item.totalSalidas, item.totalRegistros)
             tvGuardName.text = context.getString(R.string.report_guard_label, item.guardia)
             tvShiftInfo.text = context.getString(
-                R.string.report_shift_info, TimeFormat.isoToDisplay(item.fecha), context.controlPointLabel(item.controlPoint)
+                R.string.report_shift_info, TimeFormat.isoToDisplay(item.fecha), context.controlPointLabel(item.controlPoint, points)
             )
             tvShiftTime.text = context.getString(
                 R.string.report_shift_time_format,

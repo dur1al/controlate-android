@@ -37,7 +37,8 @@ data class ReportDocument(
 
 /** Resuelve etiquetas visibles de códigos de dominio (implementado en la capa de presentación). */
 interface ReportLabels {
-    fun controlPoint(id: String): String
+    /** Nombre de respaldo para un id de punto que ya no existe en la tabla (datos heredados). */
+    fun unknownControlPoint(id: String): String
     fun personaType(code: String): String
     fun shiftType(code: String): String
 }

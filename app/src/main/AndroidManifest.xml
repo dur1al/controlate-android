@@ -56,14 +56,14 @@
             android:label="@string/title_database" />
 
         <activity
+            android:name=".porteria.ui.admin.ControlPointsActivity"
+            android:exported="false"
+            android:label="@string/control_points_title" />
+
+        <activity
             android:name=".porteria.ui.settings.SettingsActivity"
             android:exported="false"
             android:label="@string/title_settings" />
-
-        <activity
-            android:name=".porteria.ui.examen.ExamenActivity"
-            android:exported="false"
-            android:label="@string/title_examen" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

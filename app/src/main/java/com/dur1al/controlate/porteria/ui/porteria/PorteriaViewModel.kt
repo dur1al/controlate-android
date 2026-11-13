@@ -6,9 +6,11 @@ import com.dur1al.controlate.R
 import com.dur1al.controlate.porteria.data.local.entities.Persona
 import com.dur1al.controlate.porteria.data.local.entities.RegistroIngreso
 import com.dur1al.controlate.porteria.data.local.entities.Turno
+import com.dur1al.controlate.porteria.domain.model.ControlPoint
 import com.dur1al.controlate.porteria.domain.model.ValidationError
 import com.dur1al.controlate.porteria.domain.model.VehicleEntryInput
 import com.dur1al.controlate.porteria.domain.report.ReportExporter
+import com.dur1al.controlate.porteria.domain.repository.ControlPointRepository
 import com.dur1al.controlate.porteria.domain.repository.VehicleEntryRepository
 import com.dur1al.controlate.porteria.domain.usecase.BuildReportUseCase
 import com.dur1al.controlate.porteria.domain.usecase.EndShiftUseCase
@@ -17,6 +19,7 @@ import com.dur1al.controlate.porteria.domain.usecase.GetActiveShiftUseCase
 import com.dur1al.controlate.porteria.domain.usecase.MarkExitUseCase
 import com.dur1al.controlate.porteria.domain.usecase.RegisterEntryOutcome
 import com.dur1al.controlate.porteria.domain.usecase.RegisterVehicleEntryUseCase
+import com.dur1al.controlate.porteria.domain.usecase.ValidateRegistroUseCase
 import com.dur1al.controlate.porteria.ui.common.EventChannel
 import com.dur1al.controlate.porteria.ui.common.UiMessage
 import com.dur1al.controlate.porteria.ui.common.runCatchingCancellable
@@ -41,12 +44,16 @@ class PorteriaViewModel(
     entries: VehicleEntryRepository,
     private val closeShift: EndShiftUseCase,
     private val buildReport: BuildReportUseCase,
-    private val exporter: ReportExporter
+    private val exporter: ReportExporter,
+    private val validator: ValidateRegistroUseCase,
+    private val controlPoints: ControlPointRepository
 ) : ViewModel() {
 
     data class UiState(
         val loading: Boolean = true,
         val turno: Turno? = null,
+        /** Punto del turno (color y nombre); `null` si el id ya no existe en la tabla. */
+        val point: ControlPoint? = null,
         val query: String = "",
         val registros: List<RegistroIngreso> = emptyList(),
         val busy: Boolean = false
@@ -63,6 +70,7 @@ class PorteriaViewModel(
     sealed interface FormEvent {
         data object Saved : FormEvent
         data class Autofill(val persona: Persona) : FormEvent
+        data class Failed(val message: UiMessage) : FormEvent
     }
 
     private val _state = MutableStateFlow(UiState())
@@ -70,6 +78,13 @@ class PorteriaViewModel(
 
     private val _formErrors = MutableStateFlow<List<ValidationError>>(emptyList())
     val formErrors: StateFlow<List<ValidationError>> = _formErrors.asStateFlow()
+
+    /** `true` mientras se guarda un ingreso: el formulario deshabilita "Registrar" (evita duplicados por doble toque). */
+    private val _formSaving = MutableStateFlow(false)
+    val formSaving: StateFlow<Boolean> = _formSaving.asStateFlow()
+
+    /** Última persona autocompletada en el formulario abierto: evita repetir el aviso en cada búsqueda. */
+    private var lastAutofillId: Int? = null
 
     private val eventChannel = EventChannel<Event>()
     val events: Flow<Event> = eventChannel.events
@@ -87,7 +102,7 @@ class PorteriaViewModel(
                 _state.update { it.copy(loading = false) }
                 eventChannel.send(Event.NoActiveShift)
             } else {
-                _state.update { it.copy(turno = turno) }
+                _state.update { it.copy(turno = turno, point = controlPoints.get(turno.controlPoint)) }
                 shiftId.value = turno.id
             }
         }
@@ -103,33 +118,65 @@ class PorteriaViewModel(
         _state.update { it.copy(query = value) }
     }
 
-    fun clearFormErrors() {
+    /** Se llama al abrir el formulario: parte sin errores ni autocompletado previo. */
+    fun onFormOpened() {
         _formErrors.value = emptyList()
+        lastAutofillId = null
+    }
+
+    /** Quita el error de un campo en cuanto el guardia lo corrige (el resto se mantiene visible). */
+    fun clearFieldError(field: ValidationError.Field) {
+        _formErrors.update { errors -> errors.filterNot { it.field == field } }
+    }
+
+    /**
+     * Valida un campo al salir de él. Solo marca errores de formato: "obligatorio" se informa
+     * al pulsar "Registrar", para no regañar al guardia por un campo que aún no completa.
+     */
+    fun onFieldBlur(field: ValidationError.Field, value: String) {
+        if (value.isBlank()) return
+        val error = when (field) {
+            ValidationError.Field.PATENTE -> validator.patente(value)
+            ValidationError.Field.NOMBRE -> validator.nombre(value)
+            ValidationError.Field.RUT -> validator.rut(value, required = false)
+            else -> null
+        } ?: return
+        _formErrors.update { errors -> errors.filterNot { it.field == field } + error }
     }
 
     fun register(input: VehicleEntryInput) {
         val id = shiftId.value ?: return eventChannel.send(Event.NoActiveShift)
+        if (_formSaving.value) return
+        _formSaving.value = true
         viewModelScope.launch {
-            when (val outcome = registerEntry(id, input)) {
-                is RegisterEntryOutcome.Invalid -> _formErrors.value = outcome.errors
-                is RegisterEntryOutcome.Saved -> {
-                    _formErrors.value = emptyList()
-                    formChannel.send(FormEvent.Saved)
+            runCatchingCancellable { registerEntry(id, input) }
+                .onSuccess { outcome ->
+                    when (outcome) {
+                        is RegisterEntryOutcome.Invalid -> _formErrors.value = outcome.errors
+                        is RegisterEntryOutcome.Saved -> {
+                            _formErrors.value = emptyList()
+                            formChannel.send(FormEvent.Saved)
+                            eventChannel.send(Event.Message(UiMessage(R.string.entry_registered)))
+                        }
+                    }
                 }
-            }
+                .onFailure { formChannel.send(FormEvent.Failed(UiMessage(R.string.error_save_entry))) }
+            _formSaving.value = false
         }
     }
 
     fun lookupPlate(raw: String) {
-        viewModelScope.launch {
-            findPersona.byPatente(raw)?.let { formChannel.send(FormEvent.Autofill(it)) }
-        }
+        viewModelScope.launch { findPersona.byPatente(raw)?.let(::offerAutofill) }
     }
 
     fun lookupRut(raw: String) {
-        viewModelScope.launch {
-            findPersona.byRut(raw)?.let { formChannel.send(FormEvent.Autofill(it)) }
-        }
+        viewModelScope.launch { findPersona.byRut(raw)?.let(::offerAutofill) }
+    }
+
+    private fun offerAutofill(persona: Persona) {
+        if (persona.id == lastAutofillId) return
+        lastAutofillId = persona.id
+        formChannel.send(FormEvent.Autofill(persona))
     }
 
     fun markExit(registro: RegistroIngreso) {

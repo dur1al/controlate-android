@@ -2,7 +2,6 @@ package com.dur1al.controlate.porteria.ui.porteria
 
 import android.content.Context
 import android.content.Intent
-import android.content.res.ColorStateList
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -12,8 +11,11 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.dur1al.controlate.R
 import com.dur1al.controlate.databinding.ActivityMainBinding
 import com.dur1al.controlate.porteria.domain.model.ControlPoint
+import com.dur1al.controlate.porteria.ui.common.applyAccent
+import com.dur1al.controlate.porteria.ui.common.applyReadableTint
 import com.dur1al.controlate.porteria.ui.common.collectWhenStarted
-import com.dur1al.controlate.porteria.ui.common.colorRes
+import com.dur1al.controlate.porteria.ui.common.color
+import com.dur1al.controlate.porteria.ui.common.readableColorOn
 import com.dur1al.controlate.porteria.ui.login.LoginActivity
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
@@ -48,7 +50,7 @@ class PorteriaActivity : AppCompatActivity() {
     }
 
     private fun observeState() = collectWhenStarted(viewModel.state) { state ->
-        state.turno?.let { applyPointTheme(ControlPoint.fromId(it.controlPoint) ?: ControlPoint.PORTERIA_2) }
+        state.turno?.let { turno -> applyPointTheme(state.point ?: fallbackPoint(turno.controlPoint)) }
         adapter.submitList(state.registros)
         val empty = !state.loading && state.registros.isEmpty()
         binding.emptyStateLayout.isVisible = empty
@@ -61,17 +63,29 @@ class PorteriaActivity : AppCompatActivity() {
             PorteriaViewModel.Event.NoActiveShift, PorteriaViewModel.Event.ShiftEnded -> goToLogin()
             is PorteriaViewModel.Event.ExitMarked ->
                 Snackbar.make(binding.root, getString(R.string.exit_registered_for, event.patente), Snackbar.LENGTH_LONG)
+                    .setAnchorView(binding.bottomBarCard)
                     .setAction(R.string.action_undo) { viewModel.undoExit(event.id, event.at) }
                     .show()
             is PorteriaViewModel.Event.Message ->
-                Snackbar.make(binding.root, event.message.resolve(this), Snackbar.LENGTH_SHORT).show()
+                Snackbar.make(binding.root, event.message.resolve(this), Snackbar.LENGTH_SHORT).setAnchorView(binding.bottomBarCard).show()
         }
     }
 
+    private var themedPoint: ControlPoint? = null
+
+    /** Turno heredado cuyo punto ya no existe: se muestra con el primer color de porterías. */
+    private fun fallbackPoint(id: String) =
+        ControlPoint(id, getString(R.string.unknown_control_point, id), ControlPoint.Kind.PORTERIA, 0)
+
+    /** Color del punto en cabecera y botón principal; texto e iconos se eligen por contraste. */
     private fun applyPointTheme(point: ControlPoint) {
-        val color = ContextCompat.getColor(this, point.colorRes)
+        if (point == themedPoint) return
+        themedPoint = point
+        val color = point.color(this)
         binding.headerLayout.setBackgroundColor(color)
-        binding.fabNuevoRedesign.backgroundTintList = ColorStateList.valueOf(color)
+        binding.tvHeaderTitle.setTextColor(binding.tvHeaderTitle.readableColorOn(color))
+        binding.btnEndShift.applyReadableTint(color)
+        binding.fabNuevoRedesign.applyAccent(color)
     }
 
     private fun confirmEndShift() {

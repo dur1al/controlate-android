@@ -6,6 +6,7 @@ import com.dur1al.controlate.porteria.domain.model.ShiftType
 import com.dur1al.controlate.porteria.testing.FakeClock
 import com.dur1al.controlate.porteria.testing.FakeSessionStore
 import com.dur1al.controlate.porteria.testing.FakeShiftRepository
+import com.dur1al.controlate.porteria.testing.Points
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -26,7 +27,7 @@ class ShiftUseCasesTest {
 
     @Test
     fun `start persists the shift and points the session to it`() = runTest {
-        val outcome = start("  Guardia Demo ", ControlPoint.PORTERIA_3, ShiftType.NIGHT)
+        val outcome = start("  Guardia Demo ", Points.PORTERIA_2, ShiftType.NIGHT)
 
         val turno = (outcome as StartShiftUseCase.Outcome.Started).turno
         assertEquals("Guardia Demo", turno.guardia)
@@ -40,13 +41,13 @@ class ShiftUseCasesTest {
 
     @Test
     fun `start rejects guard names shorter than three characters`() = runTest {
-        assertEquals(StartShiftUseCase.Outcome.InvalidGuardName, start("Al", ControlPoint.PORTERIA_2, ShiftType.DAY))
+        assertEquals(StartShiftUseCase.Outcome.InvalidGuardName, start("Al", Points.PORTERIA_1, ShiftType.DAY))
         assertNull(session.activeShiftId())
     }
 
     @Test
     fun `active shift is returned while open`() = runTest {
-        val started = (start("Guardia", ControlPoint.BICICLETERO_1, ShiftType.DAY) as StartShiftUseCase.Outcome.Started).turno
+        val started = (start("Guardia", Points.BICICLETERO_1, ShiftType.DAY) as StartShiftUseCase.Outcome.Started).turno
         assertEquals(started, getActive())
     }
 
@@ -64,7 +65,7 @@ class ShiftUseCasesTest {
 
     @Test
     fun `end closes the shift at the current time and clears the session`() = runTest {
-        val started = (start("Guardia", ControlPoint.PORTERIA_2, ShiftType.DAY) as StartShiftUseCase.Outcome.Started).turno
+        val started = (start("Guardia", Points.PORTERIA_1, ShiftType.DAY) as StartShiftUseCase.Outcome.Started).turno
         clock.advanceMinutes(90)
 
         val closed = end()

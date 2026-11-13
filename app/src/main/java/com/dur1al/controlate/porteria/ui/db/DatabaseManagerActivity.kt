@@ -39,6 +39,7 @@ class DatabaseManagerActivity : AppCompatActivity() {
                 is DirectoryViewModel.Event.ImportFailed -> showImportErrors(event.errors)
                 is DirectoryViewModel.Event.Message ->
                     Snackbar.make(binding.root, event.message.resolve(this), Snackbar.LENGTH_LONG).show()
+                DirectoryViewModel.Event.EditSaved -> Unit // La edición vive en AdminDirectoryActivity.
             }
         }
     }

@@ -15,7 +15,6 @@ flowchart LR
         T["Iniciar / retomar / cerrar turno"]
         PV["Portería vehicular<br/>Ingreso, autocompletado, salida + Deshacer"]
         PB["Bicicletero<br/>Ingreso por RUT, autocompletado, salida + Deshacer"]
-        EX["Simulador OS-10<br/>60 preguntas, 60 min, ≥ 70 %"]
     end
 
     subgraph Administracion["Panel protegido por PIN"]
@@ -52,7 +51,7 @@ flowchart TB
 
     subgraph UI["ui/ (Presentación · MVVM)"]
         direction LR
-        ACT["Activities & BottomSheets<br/>Login · Porteria · Bicicletero<br/>Admin · ShiftReport · AdminDirectory<br/>DatabaseManager · Settings · Examen"]
+        ACT["Activities & BottomSheets<br/>Login · Porteria · Bicicletero<br/>Admin · ShiftReport · AdminDirectory<br/>DatabaseManager · Settings"]
         VM["ViewModels<br/>StateFlow&lt;UiState&gt; + EventChannel"]
         LBL["ui/common/<br/>AndroidReportLabels · Labels"]
         ACT -->|intenciones| VM
@@ -61,7 +60,7 @@ flowchart TB
 
     subgraph DOMAIN["domain/ (Núcleo sin Android)"]
         direction LR
-        UC["usecase/<br/>Shift · Entry · Admin<br/>BuildReport · Exam · Validate"]
+        UC["usecase/<br/>Shift · Entry · Admin<br/>BuildReport · Validate"]
         VAL["validation/ & importer/<br/>Rut · Patente · PersonaCsvParser"]
         TIME["time/<br/>Clock · TimeFormat"]
         PORT["Contratos (puertos)<br/>Repositories · SessionStore<br/>ReportExporter · ReportLabels"]
@@ -73,7 +72,7 @@ flowchart TB
     subgraph DATA["data/ (Implementación y I/O)"]
         direction LR
         ROOM["local/database/ & dao/<br/>AppDatabase (v18) · Migration17To18<br/>DatabaseSeeder · DAOs"]
-        REPO["repository/<br/>RoomShift · RoomVehicleEntry<br/>RoomBikeEntry · RoomPersona · RoomExam"]
+        REPO["repository/<br/>RoomShift · RoomVehicleEntry<br/>RoomBikeEntry · RoomPersona"]
         PDF["report/<br/>PdfReportWriter (Dispatchers.IO)<br/>ReportStore (files/reports)"]
         SEC["local/security/ & session/<br/>AdminPinManager · EncryptedKeyValueStore<br/>SessionManager"]
         REPO --> ROOM
@@ -133,11 +132,6 @@ classDiagram
         +insertIfAbsent(persona: Persona)
         +upsertAll(personas: List~Persona~)
     }
-    class ExamRepository {
-        <<interface>>
-        +randomQuestions(limit: Int) List~ExamenPregunta~
-        +saveResult(resultado: ExamenResultado) Long
-    }
     class ReportExporter {
         <<interface>>
         +export(document: ReportDocument) File
@@ -148,7 +142,6 @@ classDiagram
     VehicleEntryRepository <|.. RoomVehicleEntryRepository
     BikeEntryRepository <|.. RoomBikeEntryRepository
     PersonaRepository <|.. RoomPersonaRepository
-    ExamRepository <|.. RoomExamRepository
     ReportExporter <|.. PdfReportWriter
 ```
 
@@ -156,7 +149,7 @@ classDiagram
 
 ## 4. Modelo de datos (Room v18)
 
-`turnos` es la raíz de agregación. Los instantes se almacenan en **epoch millis** (`iniciadoAt`, `finalizadoAt`, `entradaAt`, `salidaAt`, `realizadoAt`). `personas` y las tablas de examen son independientes de `turnos`.
+`turnos` es la raíz de agregación. Los instantes se almacenan en **epoch millis** (`iniciadoAt`, `finalizadoAt`, `entradaAt`, `salidaAt`, `personas` es independiente de `turnos`.
 
 ```mermaid
 erDiagram
@@ -166,7 +159,7 @@ erDiagram
     TURNOS {
         long id PK
         string guardia
-        string controlPoint "porteria_2..bicicletero_2"
+        string controlPoint "porteria_2..bicicletero_2 (Portería 1 = porteria_2)"
         string tipo "DAY | NIGHT"
         string fecha "yyyy-MM-dd"
         long iniciadoAt
@@ -209,27 +202,6 @@ erDiagram
         string rut "idx, nullable"
         string tipoPersona
         string padron "nullable"
-    }
-    EXAMEN_PREGUNTAS {
-        int id PK
-        string pregunta UK
-        string opcionA
-        string opcionB
-        string opcionC
-        string opcionD
-        int respuestaCorrecta
-        string categoria
-        string explicacion
-    }
-    EXAMEN_RESULTADOS {
-        long id PK
-        string guardiaNombre
-        long realizadoAt
-        int puntaje
-        int totalPreguntas
-        float porcentaje
-        boolean aprobado
-        long tiempoEmpleadoSegundos
     }
 ```
 
@@ -342,7 +314,6 @@ flowchart LR
     VS["VehicleEntrySheet"]
     B["BicicleteroDashboardActivity"]
     BS["BikeEntrySheet"]
-    E["ExamenActivity"]
     A["AdminActivity<br/>(PIN)"]
     SR["ShiftReportActivity"]
     DM["DatabaseManagerActivity"]
@@ -351,7 +322,6 @@ flowchart LR
 
     L -->|"Turno vehicular"| P
     L -->|"Turno bicicletero"| B
-    L -->|"Simulador OS-10"| E
     L -->|"Vista Admin (PIN OK)"| A
 
     P <--> VS
@@ -374,17 +344,14 @@ sequenceDiagram
     participant App as App.onCreate()
     participant Koin as Koin (appModules)
     participant Seed as DatabaseSeeder
-    participant DB as AppDatabase (Room v18)
+    participant DB as AppDatabase (Room v19)
 
     App->>Koin: startKoin(appModules)
     App->>Seed: launch(Dispatchers.IO) { seedIfNeeded() }
-    Seed->>DB: examenDao().countPreguntas()
-    Note over DB: Al abrir SQLite por 1.ª vez:<br/>si v17 -> Migration17To18;<br/>si nueva -> onDatabaseCreated()
+    Seed->>DB: personaDao().count()
+    Note over DB: Al abrir SQLite por 1.ª vez:<br/>si v17/v18 -> migraciones hasta v19;<br/>si nueva -> onDatabaseCreated()
     alt Instalación nueva y personas == 0
         Seed->>DB: personaDao().upsertAll(res/raw/seed_personas.json)
-    end
-    alt examen_preguntas == 0
-        Seed->>DB: examenDao().insertPreguntas(res/raw/seed_preguntas.json)
     end
 ```
 

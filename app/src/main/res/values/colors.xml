@@ -17,11 +17,18 @@
     <color name="bicicletero2_primary">#00A884</color>
 
     <!-- Per-point colors (unique visual identity) -->
-    <color name="point_porteria_2">#7C4DFF</color>
-    <color name="point_porteria_3">#536DFE</color>
-    <color name="point_porteria_4">#00E5FF</color>
+    <color name="point_porteria_1">#7C4DFF</color>
+    <color name="point_porteria_2">#536DFE</color>
+    <color name="point_porteria_3">#00E5FF</color>
     <color name="point_bicicletero_1">#00BFA5</color>
     <color name="point_bicicletero_2">#00C853</color>
+    <!-- Colores adicionales para puntos creados por el administrador (rotan por tipo). -->
+    <color name="point_porteria_extra_1">#FF6E40</color>
+    <color name="point_porteria_extra_2">#FFD740</color>
+    <color name="point_porteria_extra_3">#E040FB</color>
+    <color name="point_bicicletero_extra_1">#64DD17</color>
+    <color name="point_bicicletero_extra_2">#1DE9B6</color>
+    <color name="point_bicicletero_extra_3">#AEEA00</color>
 
     <!-- Semantic UI -->
     <color name="error_red">#FF6B6B</color>
@@ -30,6 +37,13 @@
     <color name="text_main">#F4F1F8</color>
     <color name="text_secondary">#C7C4D0</color>
     <color name="text_hint">#AFA6C7</color>
+
+    <!-- Fondos de botones con texto blanco: fijos (no cambian en modo noche) y con contraste
+         WCAG AA >= 4.5:1. Verificado en ContrastTest. -->
+    <color name="action_primary">#7C4DFF</color>
+    <color name="action_bike">#00806A</color>
+    <color name="action_success">#2E7D32</color>
+    <color name="action_disabled_bg">#343943</color>
 
     <!-- Status badges -->
     <color name="status_inside_bg">#1A4CAF50</color>

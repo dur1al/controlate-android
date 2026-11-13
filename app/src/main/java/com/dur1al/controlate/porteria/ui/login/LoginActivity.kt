@@ -19,17 +19,17 @@ import com.dur1al.controlate.porteria.domain.time.Clock
 import com.dur1al.controlate.porteria.domain.time.TimeFormat
 import com.dur1al.controlate.porteria.ui.admin.AdminActivity
 import com.dur1al.controlate.porteria.ui.bicicletero.BicicleteroDashboardActivity
+import com.dur1al.controlate.porteria.ui.common.applyAccent
 import com.dur1al.controlate.porteria.ui.common.collectWhenStarted
-import com.dur1al.controlate.porteria.ui.common.labelRes
+import com.dur1al.controlate.porteria.ui.common.openUrl
 import com.dur1al.controlate.porteria.ui.common.textTrimmed
-import com.dur1al.controlate.porteria.ui.examen.ExamenActivity
 import com.dur1al.controlate.porteria.ui.porteria.PorteriaActivity
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
-/** Punto de entrada: inicio de turno, acceso administrador y simulador OS-10. */
+/** Punto de entrada: inicio de turno, acceso administrador e información de contacto. */
 class LoginActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityLoginBinding
@@ -67,34 +67,46 @@ class LoginActivity : AppCompatActivity() {
         etGuardia.doAfterTextChanged { viewModel.clearGuardNameError() }
         btnIniciarTurno.setOnClickListener { viewModel.startShift(etGuardia.textTrimmed()) }
         btnAdminAccess.setOnClickListener { viewModel.onAdminClicked() }
-        btnExamenOS10.setOnClickListener {
-            startActivity(ExamenActivity.intent(this@LoginActivity, etGuardia.textTrimmed()))
-        }
-        btnAbout.setOnClickListener {
-            MaterialAlertDialogBuilder(this@LoginActivity)
-                .setTitle(R.string.login_about_title)
-                .setMessage(R.string.login_about_message)
-                .setPositiveButton(R.string.dialog_close, null)
-                .show()
+        btnAbout.setOnClickListener { showAboutDialog() }
+    }
+
+    private fun showAboutDialog() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.login_about_title)
+            .setMessage(getString(R.string.login_about_message, getString(R.string.developer_contact_display)))
+            .setPositiveButton(R.string.login_about_open_github) { _, _ -> openContactPage() }
+            .setNegativeButton(R.string.dialog_close, null)
+            .show()
+    }
+
+    /** Abre el perfil del desarrollador; sin navegador instalado se informa en lugar de fallar. */
+    private fun openContactPage() {
+        if (!openUrl(getString(R.string.developer_contact_url))) {
+            Snackbar.make(binding.root, R.string.error_no_browser, Snackbar.LENGTH_LONG).show()
         }
     }
 
     private fun render(state: LoginViewModel.UiState) = with(binding) {
         loginRoot.isVisible = !state.checkingSession
         tilGuardia.error = if (state.guardNameError) getString(R.string.login_guard_name_error) else null
-        btnIniciarTurno.isEnabled = !state.busy
 
-        val labels = state.points.map { getString(it.labelRes) }
-        actvControlPoint.setAdapter(ArrayAdapter(this@LoginActivity, android.R.layout.simple_dropdown_item_1line, labels))
-        actvControlPoint.setText(getString(state.selectedPoint.labelRes), false)
+        actvControlPoint.setAdapter(
+            ArrayAdapter(this@LoginActivity, android.R.layout.simple_dropdown_item_1line, state.points.map { it.name })
+        )
+        actvControlPoint.setText(state.selectedPoint?.name.orEmpty(), false)
+        // Sin puntos activos del tipo elegido: se explica en el campo y no se puede iniciar turno.
+        tilControlPoint.error = if (state.points.isEmpty() && !state.checkingSession) getString(R.string.login_no_active_points) else null
+        btnIniciarTurno.isEnabled = !state.busy && state.selectedPoint != null
 
         val isBike = state.kind == ControlPoint.Kind.BICICLETERO
-        val primary = ContextCompat.getColor(this@LoginActivity, if (isBike) R.color.bicicletero2_primary else R.color.bicicletero1_primary)
+        val primary = ContextCompat.getColor(this@LoginActivity, if (isBike) R.color.action_bike else R.color.action_primary)
+        // El texto del botón de admin va sobre el fondo de la pantalla: usa la variante clara del acento.
+        val accentText = ContextCompat.getColor(this@LoginActivity, if (isBike) R.color.bicicletero2_primary else R.color.primary_light)
         loginRoot.setBackgroundColor(
             ContextCompat.getColor(this@LoginActivity, if (isBike) R.color.surface_bicicletero else R.color.black)
         )
-        btnIniciarTurno.backgroundTintList = ColorStateList.valueOf(primary)
-        btnAdminAccess.setTextColor(primary)
+        btnIniciarTurno.applyAccent(primary)
+        btnAdminAccess.setTextColor(accentText)
 
         val shiftColor = ContextCompat.getColor(
             this@LoginActivity, if (state.shiftType == ShiftType.DAY) R.color.warning_orange else R.color.primary_light
@@ -106,7 +118,7 @@ class LoginActivity : AppCompatActivity() {
     private fun handle(event: LoginViewModel.Event) {
         when (event) {
             is LoginViewModel.Event.OpenShift -> {
-                val intent = when (event.point.kind) {
+                val intent = when (event.kind) {
                     ControlPoint.Kind.BICICLETERO -> BicicleteroDashboardActivity.intent(this)
                     ControlPoint.Kind.PORTERIA -> PorteriaActivity.intent(this)
                 }

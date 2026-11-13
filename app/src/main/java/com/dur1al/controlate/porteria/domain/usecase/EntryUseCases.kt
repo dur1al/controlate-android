@@ -20,7 +20,7 @@ sealed interface RegisterEntryOutcome {
 }
 
 /**
- * Valida, normaliza y guarda un ingreso vehicular. Si la persona no existe en el directorio
+ * Valida, normaliza y guarda un ingreso vehicular. Rechaza una patente que ya está dentro en el turno. Si la persona no existe en el directorio
  * (ni por RUT ni por patente) se agrega; una persona existente nunca se sobrescribe.
  */
 class RegisterVehicleEntryUseCase(
@@ -32,6 +32,9 @@ class RegisterVehicleEntryUseCase(
     suspend operator fun invoke(shiftId: Long, input: VehicleEntryInput): RegisterEntryOutcome {
         val errors = validator.validateVehicle(input)
         if (errors.isNotEmpty()) return RegisterEntryOutcome.Invalid(errors)
+        if (entries.isInside(shiftId, Patente.normalize(input.patente))) {
+            return RegisterEntryOutcome.Invalid(listOf(ValidationError(ValidationError.Field.PATENTE, ValidationError.Reason.ALREADY_INSIDE)))
+        }
 
         val registro = RegistroIngreso(
             shiftId = shiftId,
@@ -70,7 +73,7 @@ class RegisterVehicleEntryUseCase(
     }
 }
 
-/** Valida, normaliza y guarda un ingreso al bicicletero. */
+/** Valida, normaliza y guarda un ingreso al bicicletero. Rechaza un RUT que ya tiene bicicleta dentro. */
 class RegisterBikeEntryUseCase(
     private val validator: ValidateRegistroUseCase,
     private val entries: BikeEntryRepository,
@@ -79,6 +82,9 @@ class RegisterBikeEntryUseCase(
     suspend operator fun invoke(shiftId: Long, input: BikeEntryInput): RegisterEntryOutcome {
         val errors = validator.validateBike(input)
         if (errors.isNotEmpty()) return RegisterEntryOutcome.Invalid(errors)
+        if (entries.isInside(shiftId, Rut.normalize(input.rut))) {
+            return RegisterEntryOutcome.Invalid(listOf(ValidationError(ValidationError.Field.RUT, ValidationError.Reason.ALREADY_INSIDE)))
+        }
 
         val id = entries.insert(
             RegistroBicicleta(

@@ -7,22 +7,22 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.dur1al.controlate.porteria.data.local.dao.BicicletaDao
-import com.dur1al.controlate.porteria.data.local.dao.ExamenDao
 import com.dur1al.controlate.porteria.data.local.dao.PersonaDao
+import com.dur1al.controlate.porteria.data.local.dao.PuntoControlDao
 import com.dur1al.controlate.porteria.data.local.dao.RegistroDao
 import com.dur1al.controlate.porteria.data.local.dao.TurnoDao
-import com.dur1al.controlate.porteria.data.local.entities.ExamenPregunta
-import com.dur1al.controlate.porteria.data.local.entities.ExamenResultado
 import com.dur1al.controlate.porteria.data.local.entities.Persona
+import com.dur1al.controlate.porteria.data.local.entities.PuntoControl
 import com.dur1al.controlate.porteria.data.local.entities.RegistroBicicleta
 import com.dur1al.controlate.porteria.data.local.entities.RegistroIngreso
 import com.dur1al.controlate.porteria.data.local.entities.Turno
+import com.dur1al.controlate.porteria.domain.model.ControlPoint
 
 /**
  * Base de datos local (fuente única de verdad, offline-first).
  *
  * El esquema se exporta a `app/schemas/` y cada migración se cubre con un test
- * (`Migration17To18Test`). Versiones anteriores a la 12 no tienen ruta de migración:
+ * (`Migration17To18Test`, `Migration18To19Test`, `Migration19To20Test`). Versiones anteriores a la 12 no tienen ruta de migración:
  * la app nunca se distribuyó públicamente con ellas.
  */
 @Database(
@@ -31,10 +31,9 @@ import com.dur1al.controlate.porteria.data.local.entities.Turno
         RegistroIngreso::class,
         Persona::class,
         RegistroBicicleta::class,
-        ExamenPregunta::class,
-        ExamenResultado::class
+        PuntoControl::class
     ],
-    version = 18,
+    version = 20,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -42,7 +41,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun registroDao(): RegistroDao
     abstract fun personaDao(): PersonaDao
     abstract fun bicicletaDao(): BicicletaDao
-    abstract fun examenDao(): ExamenDao
+    abstract fun puntoControlDao(): PuntoControlDao
 
     companion object {
         const val DATABASE_NAME = "porteria_db"
@@ -56,12 +55,45 @@ abstract class AppDatabase : RoomDatabase() {
             legacyActiveShift: LegacyActiveShift?,
             onCreated: () -> Unit
         ): AppDatabase = Room.databaseBuilder(context.applicationContext, AppDatabase::class.java, DATABASE_NAME)
-            .addMigrations(*legacyMigrations(), Migration17To18(legacyActiveShift))
+            .addMigrations(*legacyMigrations(), Migration17To18(legacyActiveShift), MIGRATION_18_19, MIGRATION_19_20)
             .addCallback(object : Callback() {
-                override fun onCreate(db: SupportSQLiteDatabase) = onCreated()
+                override fun onCreate(db: SupportSQLiteDatabase) {
+                    // Los puntos de fábrica se insertan en la misma creación: nunca hay una base sin puntos.
+                    insertDefaultControlPoints(db)
+                    onCreated()
+                }
             })
             .fallbackToDestructiveMigrationOnDowngrade()
             .build()
+
+        /** 18 -> 19: se retira el simulador OS-10; sus tablas quedan huérfanas y se eliminan. */
+        internal val MIGRATION_18_19 = object : Migration(18, 19) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("DROP TABLE IF EXISTS `examen_preguntas`")
+                db.execSQL("DROP TABLE IF EXISTS `examen_resultados`")
+            }
+        }
+
+        /** 19 -> 20: los puntos de control pasan de un enum fijo a una tabla administrable. */
+        internal val MIGRATION_19_20 = object : Migration(19, 20) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `puntos_control` (`id` TEXT NOT NULL, `nombre` TEXT NOT NULL, " +
+                        "`tipo` TEXT NOT NULL, `orden` INTEGER NOT NULL, `activo` INTEGER NOT NULL, PRIMARY KEY(`id`))"
+                )
+                insertDefaultControlPoints(db)
+            }
+        }
+
+        /** Inserta los puntos de fábrica sin pisar los existentes (consultas parametrizadas). */
+        internal fun insertDefaultControlPoints(db: SupportSQLiteDatabase) {
+            ControlPoint.DEFAULTS.forEach { p ->
+                db.execSQL(
+                    "INSERT OR IGNORE INTO puntos_control (id, nombre, tipo, orden, activo) VALUES (?, ?, ?, ?, 1)",
+                    arrayOf<Any>(p.id, p.name, p.kind.name, p.order)
+                )
+            }
+        }
 
         /** Migraciones 12 -> 17: aseguran columnas agregadas en distintas versiones del bicicletero. */
         internal fun legacyMigrations(): Array<Migration> = arrayOf(

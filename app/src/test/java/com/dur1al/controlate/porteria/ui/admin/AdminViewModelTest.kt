@@ -11,10 +11,12 @@ import com.dur1al.controlate.porteria.domain.usecase.ClearOperationalDataUseCase
 import com.dur1al.controlate.porteria.domain.usecase.GetDailyStatsUseCase
 import com.dur1al.controlate.porteria.testing.FakeBikeEntryRepository
 import com.dur1al.controlate.porteria.testing.FakeClock
+import com.dur1al.controlate.porteria.testing.FakeControlPointRepository
 import com.dur1al.controlate.porteria.testing.FakePersonaRepository
 import com.dur1al.controlate.porteria.testing.FakeShiftRepository
 import com.dur1al.controlate.porteria.testing.FakeVehicleEntryRepository
 import com.dur1al.controlate.porteria.testing.MainDispatcherRule
+import com.dur1al.controlate.porteria.testing.Points
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -33,16 +35,16 @@ class AdminViewModelTest {
     private val bikes = FakeBikeEntryRepository()
     private val shifts = FakeShiftRepository(vehicles, bikes)
     private val labels = object : ReportLabels {
-        override fun controlPoint(id: String) = id
+        override fun unknownControlPoint(id: String) = id
         override fun personaType(code: String) = code
         override fun shiftType(code: String) = code
     }
     private val exported = mutableListOf<String>()
 
     private fun viewModel() = AdminViewModel(
-        getDailyStats = GetDailyStatsUseCase(shifts, clock),
+        getDailyStats = GetDailyStatsUseCase(shifts, FakeControlPointRepository(), clock),
         clearOperationalData = ClearOperationalDataUseCase(shifts, vehicles, bikes),
-        buildReport = BuildReportUseCase(shifts, vehicles, bikes, FakePersonaRepository(), labels, clock),
+        buildReport = BuildReportUseCase(shifts, vehicles, bikes, FakePersonaRepository(), FakeControlPointRepository(), labels, clock),
         exporter = ReportExporter { exported += it.fileStem; File(it.fileStem) }
     )
 
@@ -60,7 +62,7 @@ class AdminViewModelTest {
     fun `selecting a point narrows the totals`() = runTest {
         shifts.pointCounts = listOf(PointCount("porteria_2", 3, 1), PointCount("bicicletero_1", 2, 0))
         val vm = viewModel()
-        vm.selectScope(ControlPoint.BICICLETERO_1)
+        vm.selectScope(Points.BICICLETERO_1)
         assertEquals(AdminViewModel.Totals(2, 0, 2), vm.state.value.totals)
         vm.selectScope(null)
         assertEquals(AdminViewModel.Totals(5, 1, 4), vm.state.value.totals)

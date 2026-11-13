@@ -1,7 +1,7 @@
 package com.dur1al.controlate.porteria.ui.common
 
 import android.content.Context
-import androidx.annotation.ColorRes
+import androidx.annotation.ColorInt
 import androidx.annotation.StringRes
 import com.dur1al.controlate.R
 import com.dur1al.controlate.porteria.domain.model.ControlPoint
@@ -15,24 +15,27 @@ import com.dur1al.controlate.porteria.domain.report.ReportLabels
  * no dependa de `R` y la UI no repita `when` por todas partes.
  */
 
-@get:StringRes
-val ControlPoint.labelRes: Int
-    get() = when (this) {
-        ControlPoint.PORTERIA_2 -> R.string.porteria_2
-        ControlPoint.PORTERIA_3 -> R.string.porteria_3
-        ControlPoint.PORTERIA_4 -> R.string.porteria_4
-        ControlPoint.BICICLETERO_1 -> R.string.bicicletero_1
-        ControlPoint.BICICLETERO_2 -> R.string.bicicletero_2
+/**
+ * Color de identidad del punto: se toma de la paleta de su tipo según [ControlPoint.order]
+ * (los puntos de fábrica conservan sus colores; los nuevos rotan por la paleta).
+ */
+@ColorInt
+fun ControlPoint.color(context: Context): Int {
+    val palette = context.resources.obtainTypedArray(
+        if (kind == ControlPoint.Kind.BICICLETERO) R.array.point_palette_bicicletero else R.array.point_palette_porteria
+    )
+    return try {
+        palette.getColor(order.mod(palette.length()), 0)
+    } finally {
+        palette.recycle()
     }
+}
 
-@get:ColorRes
-val ControlPoint.colorRes: Int
+@get:StringRes
+val ControlPoint.Kind.labelRes: Int
     get() = when (this) {
-        ControlPoint.PORTERIA_2 -> R.color.point_porteria_2
-        ControlPoint.PORTERIA_3 -> R.color.point_porteria_3
-        ControlPoint.PORTERIA_4 -> R.color.point_porteria_4
-        ControlPoint.BICICLETERO_1 -> R.color.point_bicicletero_1
-        ControlPoint.BICICLETERO_2 -> R.color.point_bicicletero_2
+        ControlPoint.Kind.PORTERIA -> R.string.control_point_kind_porteria
+        ControlPoint.Kind.BICICLETERO -> R.string.control_point_kind_bicicletero
     }
 
 @get:StringRes
@@ -55,21 +58,38 @@ val ShiftType.labelRes: Int
 @get:StringRes
 val ValidationError.messageRes: Int
     get() = when (field) {
-        ValidationError.Field.PATENTE -> R.string.error_plate_format
-        ValidationError.Field.NOMBRE ->
-            if (reason == ValidationError.Reason.TOO_SHORT) R.string.error_name_too_short else R.string.error_name_required
-        ValidationError.Field.RUT ->
-            if (reason == ValidationError.Reason.REQUIRED) R.string.error_rut_required else R.string.error_rut_invalid
+        ValidationError.Field.PATENTE -> when (reason) {
+            ValidationError.Reason.REQUIRED -> R.string.error_plate_required
+            ValidationError.Reason.ALREADY_INSIDE -> R.string.error_plate_already_inside
+            ValidationError.Reason.DUPLICATE -> R.string.directory_duplicate_plate
+            else -> R.string.error_plate_format
+        }
+        ValidationError.Field.NOMBRE -> when (reason) {
+            ValidationError.Reason.TOO_SHORT -> R.string.error_name_too_short
+            ValidationError.Reason.TOO_LONG -> R.string.error_name_too_long
+            ValidationError.Reason.INVALID_FORMAT -> R.string.error_name_invalid_chars
+            else -> R.string.error_name_required
+        }
+        ValidationError.Field.RUT -> when (reason) {
+            ValidationError.Reason.REQUIRED -> R.string.error_rut_required
+            ValidationError.Reason.ALREADY_INSIDE -> R.string.error_rut_already_inside
+            else -> R.string.error_rut_invalid
+        }
         ValidationError.Field.PADRON -> R.string.error_padron_required
-        ValidationError.Field.CARRERA -> R.string.error_career_required
+        ValidationError.Field.CARRERA ->
+            if (reason == ValidationError.Reason.TOO_LONG) R.string.error_text_too_long else R.string.error_career_required
     }
 
-fun Context.controlPointLabel(id: String): String =
-    ControlPoint.fromId(id)?.let { getString(it.labelRes) } ?: getString(R.string.unknown_control_point, id)
+/** Nombre de [id] según los puntos cargados; si ya no existe, un texto de respaldo con el id. */
+fun Context.controlPointLabel(id: String, points: Map<String, ControlPoint>): String =
+    points[id.trim().lowercase()]?.name ?: getString(R.string.unknown_control_point, id)
+
+/** Índice por id (sin distinguir mayúsculas) para resolver nombres en listas. */
+fun List<ControlPoint>.byId(): Map<String, ControlPoint> = associateBy { it.id.lowercase() }
 
 /** [ReportLabels] respaldado por `strings.xml`. */
 class AndroidReportLabels(private val context: Context) : ReportLabels {
-    override fun controlPoint(id: String) = context.controlPointLabel(id)
+    override fun unknownControlPoint(id: String) = context.getString(R.string.unknown_control_point, id)
     override fun personaType(code: String) = context.getString(PersonaType.fromCode(code).labelRes)
     override fun shiftType(code: String) = context.getString(ShiftType.fromCode(code).labelRes)
 }

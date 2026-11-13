@@ -1,21 +1,25 @@
 package com.dur1al.controlate.porteria.data.local.dao
 
 import android.content.Context
+import android.database.sqlite.SQLiteConstraintException
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.dur1al.controlate.porteria.data.local.database.AppDatabase
 import com.dur1al.controlate.porteria.data.local.database.DatabaseSeeder
-import com.dur1al.controlate.porteria.data.local.entities.ExamenPregunta
 import com.dur1al.controlate.porteria.data.local.entities.Persona
+import com.dur1al.controlate.porteria.data.local.entities.PuntoControl
 import com.dur1al.controlate.porteria.data.local.entities.RegistroBicicleta
 import com.dur1al.controlate.porteria.data.local.entities.RegistroIngreso
 import com.dur1al.controlate.porteria.data.local.entities.Turno
+import com.dur1al.controlate.porteria.data.repository.RoomControlPointRepository
+import com.dur1al.controlate.porteria.domain.model.ControlPoint
 import com.dur1al.controlate.porteria.domain.model.PointCount
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -114,6 +118,21 @@ class DaoIntegrationTest {
     }
 
     @Test
+    fun isInside_only_counts_open_records_of_the_same_shift() = runTest {
+        val shift = turno("porteria_2", 1)
+        val other = turno("porteria_3", 1)
+        db.registroDao().insert(ingreso(shift, "AAAA11", 10))
+        db.registroDao().insert(ingreso(shift, "BBBB22", 10, salidaAt = 20))
+        db.bicicletaDao().insert(bici(shift, "111111111", 10))
+
+        assertTrue(db.registroDao().isInside(shift, "AAAA11"))
+        assertFalse(db.registroDao().isInside(shift, "BBBB22"))
+        assertFalse(db.registroDao().isInside(other, "AAAA11"))
+        assertTrue(db.bicicletaDao().isInside(shift, "111111111"))
+        assertFalse(db.bicicletaDao().isInside(other, "111111111"))
+    }
+
+    @Test
     fun record_with_unknown_shift_is_rejected_by_the_foreign_key() = runTest {
         val failure = runCatching { db.registroDao().insert(ingreso(999, "AAAA11", 10)) }.exceptionOrNull()
         assertTrue("expected FK violation, got $failure", failure is android.database.sqlite.SQLiteConstraintException)
@@ -129,14 +148,6 @@ class DaoIntegrationTest {
     }
 
     @Test
-    fun question_bank_insert_is_idempotent() = runTest {
-        val q = ExamenPregunta(pregunta = "P1", opcionA = "a", opcionB = "b", opcionC = "c", opcionD = "d", respuestaCorrecta = 0)
-        db.examenDao().insertPreguntas(listOf(q, q))
-        db.examenDao().insertPreguntas(listOf(q))
-        assertEquals(1, db.examenDao().countPreguntas())
-    }
-
-    @Test
     fun seeder_loads_demo_data_once_on_fresh_install() = runTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val seeder = DatabaseSeeder(database = { db }, resources = context.resources)
@@ -144,13 +155,41 @@ class DaoIntegrationTest {
 
         seeder.seedIfNeeded()
         val personas = db.personaDao().count()
-        val preguntas = db.examenDao().countPreguntas()
         seeder.seedIfNeeded()
 
         assertTrue(personas > 0)
-        assertTrue(preguntas > 0)
         assertEquals(personas, db.personaDao().count())
-        assertEquals(preguntas, db.examenDao().countPreguntas())
         assertTrue("seed must use PersonaType codes", db.personaDao().getAll().all { it.tipoPersona == it.tipoPersona?.uppercase() })
+    }
+
+    @Test
+    fun control_points_are_ordered_by_kind_and_looked_up_ignoring_case() = runTest {
+        val dao = db.puntoControlDao()
+        dao.insert(PuntoControl("bicicletero_1", "Bici 1", "BICICLETERO", 0, true))
+        dao.insert(PuntoControl("porteria_5", "Portería 4", "PORTERIA", 3, true))
+        dao.insert(PuntoControl("porteria_2", "Portería 1", "PORTERIA", 0, false))
+
+        assertEquals(listOf("porteria_2", "porteria_5", "bicicletero_1"), dao.getAll().map { it.id })
+        assertEquals("Bici 1", dao.getById("BICICLETERO_1")?.nombre)
+    }
+
+    @Test(expected = SQLiteConstraintException::class)
+    fun control_point_ids_are_never_overwritten() = runTest {
+        db.puntoControlDao().insert(PuntoControl("porteria_2", "Portería 1", "PORTERIA", 0, true))
+        db.puntoControlDao().insert(PuntoControl("porteria_2", "Otro", "PORTERIA", 1, true))
+    }
+
+    @Test
+    fun a_fresh_database_starts_with_the_factory_control_points() = runTest {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        context.deleteDatabase(AppDatabase.DATABASE_NAME)
+        val fresh = AppDatabase.build(context, legacyActiveShift = null, onCreated = {})
+        try {
+            val repo = RoomControlPointRepository(fresh.puntoControlDao())
+            assertEquals(ControlPoint.DEFAULTS, repo.getAll())
+        } finally {
+            fresh.close()
+            context.deleteDatabase(AppDatabase.DATABASE_NAME)
+        }
     }
 }

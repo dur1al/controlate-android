@@ -54,8 +54,10 @@ object PersonaCsvParser {
         if (!Patente.isValid(patente)) return LineOutcome.Failed(LineError.Reason.INVALID_PLATE)
         val nombre = cols[1]
         if (nombre.isBlank()) return LineOutcome.Failed(LineError.Reason.MISSING_NAME)
-        val rut = Rut.normalizeOrNull(cols.getOrNull(3))
-        if (rut != null && !Rut.isValid(rut)) return LineOutcome.Failed(LineError.Reason.INVALID_RUT)
+        // Se valida el texto tal como viene: normalizar antes ocultaría una K o letras en el cuerpo.
+        val rawRut = cols.getOrNull(3)?.takeIf { it.isNotBlank() }
+        if (rawRut != null && !Rut.isValid(rawRut)) return LineOutcome.Failed(LineError.Reason.INVALID_RUT)
+        val rut = rawRut?.let(Rut::normalize)
 
         return LineOutcome.Ok(
             Persona(

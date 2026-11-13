@@ -11,7 +11,6 @@ import com.dur1al.controlate.databinding.ItemPointStatBinding
 import com.dur1al.controlate.porteria.domain.model.ControlPoint
 import com.dur1al.controlate.porteria.domain.model.PointStat
 import com.dur1al.controlate.porteria.ui.common.collectWhenStarted
-import com.dur1al.controlate.porteria.ui.common.labelRes
 import com.dur1al.controlate.porteria.ui.common.shareReport
 import com.dur1al.controlate.porteria.ui.db.DatabaseManagerActivity
 import com.dur1al.controlate.porteria.ui.settings.SettingsActivity
@@ -27,8 +26,8 @@ class AdminActivity : AppCompatActivity() {
     private val viewModel: AdminViewModel by viewModel()
     private val numberFormat = NumberFormat.getIntegerInstance()
 
-    /** Opciones del filtro: `null` = general, luego cada punto de control. */
-    private val scopes: List<ControlPoint?> = listOf(null) + ControlPoint.entries
+    /** Opciones del filtro: `null` = general, luego cada punto con estadísticas del día. */
+    private var scopes: List<ControlPoint?> = listOf(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,12 +35,10 @@ class AdminActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         binding.toolbar.setNavigationOnClickListener { finish() }
-        val labels = scopes.map { it?.let { p -> getString(p.labelRes) } ?: getString(R.string.admin_scope_general) }
-        binding.actvScope.setAdapter(ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, labels))
-        binding.actvScope.setText(labels.first(), false)
-        binding.actvScope.setOnItemClickListener { _, _, position, _ -> viewModel.selectScope(scopes[position]) }
+        binding.actvScope.setOnItemClickListener { _, _, position, _ -> viewModel.selectScope(scopes.getOrNull(position)) }
 
         binding.cardReports.setOnClickListener { startActivity(Intent(this, ShiftReportActivity::class.java)) }
+        binding.cardControlPoints.setOnClickListener { startActivity(Intent(this, ControlPointsActivity::class.java)) }
         binding.cardDirectory.setOnClickListener { startActivity(Intent(this, DatabaseManagerActivity::class.java)) }
         binding.cardSettings.setOnClickListener { startActivity(Intent(this, SettingsActivity::class.java)) }
         binding.btnExportAdminSummary.setOnClickListener { viewModel.exportSummary() }
@@ -52,6 +49,7 @@ class AdminActivity : AppCompatActivity() {
             binding.tvSalieronCount.text = numberFormat.format(state.totals.salidas)
             binding.tvDentroCount.text = numberFormat.format(state.totals.dentro)
             binding.btnExportAdminSummary.isEnabled = !state.busy
+            renderScopes(state)
             renderPoints(state.points)
         }
         collectWhenStarted(viewModel.events) { event ->
@@ -73,11 +71,18 @@ class AdminActivity : AppCompatActivity() {
         viewModel.refresh()
     }
 
+    private fun renderScopes(state: AdminViewModel.UiState) {
+        scopes = listOf(null) + state.points.map { it.controlPoint }
+        val labels = scopes.map { it?.name ?: getString(R.string.admin_scope_general) }
+        binding.actvScope.setAdapter(ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, labels))
+        binding.actvScope.setText(state.scope?.name ?: labels.first(), false)
+    }
+
     private fun renderPoints(points: List<PointStat>) {
         binding.llPointStats.removeAllViews()
         points.forEach { stat ->
             val item = ItemPointStatBinding.inflate(layoutInflater, binding.llPointStats, false)
-            item.tvPointName.setText(stat.controlPoint.labelRes)
+            item.tvPointName.text = stat.controlPoint.name
             item.tvPointStats.text = getString(R.string.admin_point_stats_format, stat.entradas, stat.salidas, stat.dentro)
             item.tvPointStats.setTextColor(
                 ContextCompat.getColor(this, if (stat.dentro > 0) R.color.bicicletero2_primary else R.color.text_hint)

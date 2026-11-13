@@ -8,11 +8,6 @@
     <string name="nombre_rut_format">%1$s · %2$s</string>
     <string name="entrada_format">Entrada: %1$s</string>
     <string name="salida_format">Salida: %1$s</string>
-    <string name="bicicletero_1">Punto Bicicleta 1</string>
-    <string name="bicicletero_2">Punto Bicicleta 2</string>
-    <string name="porteria_2">Portería 2</string>
-    <string name="porteria_3">Portería 3</string>
-    <string name="porteria_4">Portería 4</string>
     <string name="end_shift_content_description">Finalizar turno</string>
     <string name="search_patent_hint">Buscar patente…</string>
     <string name="new_entry_short">NUEVO</string>
@@ -31,7 +26,11 @@
     <string name="login_shift_date">Fecha de turno: %1$s</string>
     <string name="login_guard_name_error">Ingresa tu nombre</string>
     <string name="login_about_title">Informacion</string>
-    <string name="login_about_message">Controlate Android\nRepositorio: github.com/dur1al/controlate-android</string>
+    <string name="login_about_message">Controlate Android\nDesarrollado por dur1al\nContacto: %1$s</string>
+    <string name="login_about_open_github">Abrir GitHub</string>
+    <string name="developer_contact_display" translatable="false">github.com/dur1al</string>
+    <string name="developer_contact_url" translatable="false">https://github.com/dur1al</string>
+    <string name="error_no_browser">No hay un navegador instalado para abrir el enlace</string>
     <string name="dialog_close">Cerrar</string>
     <string name="dialog_cancel">Cancelar</string>
     <string name="login_admin_password_hint">PIN admin (4 a 8 dígitos)</string>
@@ -144,17 +143,6 @@
 
     <string name="autofill_match_found">Datos cargados desde el directorio</string>
 
-    <!-- Examen OS-10 -->
-    <string name="examen_btn_iniciar">Examen OS-10 Guardias</string>
-    <string name="examen_pregunta_format">Pregunta %1$d de %2$d</string>
-    <string name="examen_resultado_titulo">Resultado Examen OS-10</string>
-    <string name="examen_criterio">Exigencia oficial OS-10: Mínimo 70% (42/60)</string>
-    <string name="examen_aprobado">APROBADO</string>
-    <string name="examen_reprobado">REPROBADO</string>
-    <string name="examen_btn_anterior">Anterior</string>
-    <string name="examen_btn_siguiente">Siguiente</string>
-    <string name="examen_btn_finalizar">Finalizar</string>
-
     <!-- Puntos de control, tipos y turnos (etiquetas de códigos de dominio) -->
     <string name="persona_type_visita">Visita</string>
     <string name="persona_type_estudiante">Estudiante</string>
@@ -165,12 +153,21 @@
 
     <!-- Validación de formularios -->
     <string name="error_plate_format">La patente debe tener entre 4 y 6 letras o números</string>
+    <string name="error_plate_required">La patente es obligatoria</string>
+    <string name="error_name_too_long">El nombre no puede superar 60 caracteres</string>
+    <string name="error_name_invalid_chars">El nombre solo admite letras, espacios, puntos, apóstrofes y guiones</string>
+    <string name="error_text_too_long">El texto no puede superar 60 caracteres</string>
     <string name="error_name_required">El nombre es obligatorio</string>
     <string name="error_name_too_short">El nombre debe tener al menos 2 caracteres</string>
     <string name="error_rut_required">El RUT es obligatorio</string>
-    <string name="error_rut_invalid">El RUT no es válido. Revisa el dígito verificador</string>
+    <!-- Teclas permitidas en campos RUT (el formateador agrega puntos y guion). -->
+    <string name="rut_allowed_chars" translatable="false">0123456789kK.-</string>
+    <string name="error_rut_invalid" tools:ignore="TypographyDashes">RUT inválido. Usa el formato 12.345.678-5 y revisa el dígito verificador</string>
     <string name="error_padron_required">Ingresa el número de padrón</string>
     <string name="error_career_required">La carrera o departamento es obligatorio</string>
+    <string name="error_plate_already_inside">Esta patente ya está dentro. Registra su salida antes de un nuevo ingreso</string>
+    <string name="error_rut_already_inside">Este RUT ya tiene una bicicleta dentro. Registra su salida primero</string>
+    <string name="error_save_entry">No se pudo guardar el ingreso. Revisa los datos e intenta de nuevo</string>
     <string name="error_generic">Ocurrió un error inesperado. Intenta nuevamente.</string>
 
     <!-- Salidas con deshacer -->
@@ -193,6 +190,7 @@
     <string name="directory_delete_title">Eliminar persona</string>
     <string name="directory_delete_message">¿Eliminar a %1$s del directorio?</string>
     <string name="directory_updated">Persona actualizada</string>
+    <string name="directory_duplicate_plate">Ya existe otra persona con esa patente</string>
     <string name="directory_deleted">Persona eliminada</string>
     <string name="dialog_save">Guardar</string>
     <string name="dialog_delete">Eliminar</string>
@@ -235,17 +233,35 @@
     <string name="share_report_chooser">Compartir reporte</string>
     <string name="share_report_unavailable">No hay una app para compartir el PDF. Quedó guardado en Reportes &gt; Guardados.</string>
 
-    <!-- Examen -->
-    <string name="examen_exit_title">Salir del examen</string>
-    <string name="examen_exit_message">Se perderá el progreso de este intento.</string>
-    <string name="examen_exit_confirm">Salir</string>
-    <string name="examen_finish_title">Entregar examen</string>
-    <string name="examen_finish_partial">Respondidas: %1$d de %2$d. ¿Entregar ahora?</string>
-    <string name="examen_finish_complete">Respondiste todas las preguntas. ¿Entregar ahora?</string>
-    <string name="examen_finish_confirm">Entregar</string>
-    <string name="examen_keep_answering">Seguir respondiendo</string>
-    <string name="examen_option_format">%1$s) %2$s</string>
-    <string name="examen_empty_bank">No hay preguntas disponibles en el banco local.</string>
+    <!-- Puntos de control (administración) -->
+    <string name="control_point_kind_porteria">Portería</string>
+    <string name="control_point_kind_bicicletero">Bicicletero</string>
+    <string name="action_back">Volver</string>
+    <string name="control_points_title">Puntos de control</string>
+    <string name="control_points_admin_entry">Puntos de control</string>
+    <string name="control_points_add">Agregar punto</string>
+    <string name="control_points_add_title">Nuevo punto de control</string>
+    <string name="control_points_rename_title">Renombrar punto</string>
+    <string name="control_points_name_hint">Nombre visible</string>
+    <string name="control_points_kind_label">Tipo de punto</string>
+    <string name="control_points_default_porteria">Portería %1$d</string>
+    <string name="control_points_default_bicicletero">Punto Bicicleta %1$d</string>
+    <string name="control_points_added">Punto agregado: %1$s</string>
+    <string name="control_points_renamed">Nombre actualizado</string>
+    <string name="control_points_deactivated">Punto desactivado: ya no se ofrece al iniciar turno</string>
+    <string name="control_points_activated">Punto activado</string>
+    <string name="control_points_last_active">Debe quedar al menos un punto activo de cada tipo</string>
+    <string name="control_points_active_label">Disponible para turnos</string>
+    <string name="control_points_kind_inactive_format">%1$s · Inactivo</string>
+    <string name="control_points_empty">No hay puntos de control. Agrega el primero.</string>
+    <string name="control_points_help">Los puntos activos aparecen al iniciar turno. Desactivar un punto conserva sus turnos y reportes.</string>
+    <string name="control_points_item_description">%1$s, %2$s</string>
+    <string name="error_point_name_required">Escribe un nombre para el punto</string>
+    <string name="error_point_name_too_short">El nombre debe tener al menos 3 caracteres</string>
+    <string name="error_point_name_too_long">El nombre no puede superar 30 caracteres</string>
+    <string name="error_point_name_invalid">Usa solo letras, números, espacios y . - # °</string>
+    <string name="error_point_name_duplicate">Ya existe un punto con ese nombre</string>
+    <string name="login_no_active_points">No hay puntos activos de este tipo. Pide al administrador que active uno.</string>
 
     <!-- Títulos de pantallas (manifest) -->
     <string name="title_admin">Panel administrador</string>
@@ -254,15 +270,8 @@
     <string name="title_reports">Reportes de turnos</string>
     <string name="title_database">Gestión de datos</string>
     <string name="title_settings">Ajustes</string>
-    <string name="title_examen">Examen OS-10</string>
     <string name="settings_change_pin_title">Cambiar PIN de administrador</string>
     <string name="settings_current_pin">PIN actual</string>
     <string name="settings_new_pin">Nuevo PIN (4 a 8 dígitos)</string>
     <string name="settings_save_pin">Guardar PIN</string>
-    <string name="examen_resultado_puntaje">%1$d / %2$d</string>
-    <string name="examen_resultado_porcentaje">%1$.1f%%</string>
-    <string name="examen_resultado_guardia">Guardia: %1$s</string>
-    <string name="examen_resultado_fecha">Fecha: %1$s</string>
-    <string name="examen_resultado_tiempo">Tiempo empleado: %1$d min %2$d s</string>
-    <string name="examen_timer_format">%1$02d:%2$02d</string>
 </resources>

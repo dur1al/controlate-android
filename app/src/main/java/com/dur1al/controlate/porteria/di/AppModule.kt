@@ -8,39 +8,41 @@ import com.dur1al.controlate.porteria.data.local.session.SessionManager
 import com.dur1al.controlate.porteria.data.report.PdfReportWriter
 import com.dur1al.controlate.porteria.data.report.ReportStore
 import com.dur1al.controlate.porteria.data.repository.RoomBikeEntryRepository
-import com.dur1al.controlate.porteria.data.repository.RoomExamRepository
+import com.dur1al.controlate.porteria.data.repository.RoomControlPointRepository
 import com.dur1al.controlate.porteria.data.repository.RoomPersonaRepository
 import com.dur1al.controlate.porteria.data.repository.RoomShiftRepository
 import com.dur1al.controlate.porteria.data.repository.RoomVehicleEntryRepository
 import com.dur1al.controlate.porteria.domain.report.ReportExporter
 import com.dur1al.controlate.porteria.domain.report.ReportLabels
 import com.dur1al.controlate.porteria.domain.repository.BikeEntryRepository
-import com.dur1al.controlate.porteria.domain.repository.ExamRepository
+import com.dur1al.controlate.porteria.domain.repository.ControlPointRepository
 import com.dur1al.controlate.porteria.domain.repository.PersonaRepository
 import com.dur1al.controlate.porteria.domain.repository.SessionStore
 import com.dur1al.controlate.porteria.domain.repository.ShiftRepository
 import com.dur1al.controlate.porteria.domain.repository.VehicleEntryRepository
 import com.dur1al.controlate.porteria.domain.time.Clock
+import com.dur1al.controlate.porteria.domain.usecase.AddControlPointUseCase
 import com.dur1al.controlate.porteria.domain.usecase.BuildReportUseCase
-import com.dur1al.controlate.porteria.domain.usecase.CalcularResultadoExamenUseCase
 import com.dur1al.controlate.porteria.domain.usecase.ClearOperationalDataUseCase
 import com.dur1al.controlate.porteria.domain.usecase.EndShiftUseCase
 import com.dur1al.controlate.porteria.domain.usecase.FindPersonaUseCase
-import com.dur1al.controlate.porteria.domain.usecase.GenerarExamenUseCase
 import com.dur1al.controlate.porteria.domain.usecase.GetActiveShiftUseCase
 import com.dur1al.controlate.porteria.domain.usecase.GetDailyStatsUseCase
 import com.dur1al.controlate.porteria.domain.usecase.ImportPersonasUseCase
 import com.dur1al.controlate.porteria.domain.usecase.MarkExitUseCase
 import com.dur1al.controlate.porteria.domain.usecase.RegisterBikeEntryUseCase
 import com.dur1al.controlate.porteria.domain.usecase.RegisterVehicleEntryUseCase
+import com.dur1al.controlate.porteria.domain.usecase.RenameControlPointUseCase
+import com.dur1al.controlate.porteria.domain.usecase.SetControlPointActiveUseCase
 import com.dur1al.controlate.porteria.domain.usecase.StartShiftUseCase
+import com.dur1al.controlate.porteria.domain.usecase.ValidateControlPointNameUseCase
 import com.dur1al.controlate.porteria.domain.usecase.ValidateRegistroUseCase
 import com.dur1al.controlate.porteria.ui.admin.AdminViewModel
+import com.dur1al.controlate.porteria.ui.admin.ControlPointsViewModel
 import com.dur1al.controlate.porteria.ui.admin.ShiftReportsViewModel
 import com.dur1al.controlate.porteria.ui.bicicletero.BicicleteroViewModel
 import com.dur1al.controlate.porteria.ui.common.AndroidReportLabels
 import com.dur1al.controlate.porteria.ui.db.DirectoryViewModel
-import com.dur1al.controlate.porteria.ui.examen.ExamenViewModel
 import com.dur1al.controlate.porteria.ui.login.LoginViewModel
 import com.dur1al.controlate.porteria.ui.porteria.PorteriaViewModel
 import com.dur1al.controlate.porteria.ui.settings.SettingsViewModel
@@ -72,13 +74,13 @@ val dataModule = module {
     single { get<AppDatabase>().registroDao() }
     single { get<AppDatabase>().bicicletaDao() }
     single { get<AppDatabase>().personaDao() }
-    single { get<AppDatabase>().examenDao() }
+    single { get<AppDatabase>().puntoControlDao() }
 
     singleOf(::RoomShiftRepository) bind ShiftRepository::class
     singleOf(::RoomVehicleEntryRepository) bind VehicleEntryRepository::class
     singleOf(::RoomBikeEntryRepository) bind BikeEntryRepository::class
     singleOf(::RoomPersonaRepository) bind PersonaRepository::class
-    singleOf(::RoomExamRepository) bind ExamRepository::class
+    singleOf(::RoomControlPointRepository) bind ControlPointRepository::class
 
     single { AdminPinManager(EncryptedKeyValueStore(androidContext()), get()) }
 
@@ -97,23 +99,25 @@ val domainModule = module {
     factoryOf(::RegisterBikeEntryUseCase)
     factoryOf(::MarkExitUseCase)
     factoryOf(::FindPersonaUseCase)
-    factory { GetDailyStatsUseCase(get(), get()) }
+    factory { GetDailyStatsUseCase(get(), get(), get()) }
+    factoryOf(::ValidateControlPointNameUseCase)
+    factoryOf(::AddControlPointUseCase)
+    factoryOf(::RenameControlPointUseCase)
+    factoryOf(::SetControlPointActiveUseCase)
     factoryOf(::ClearOperationalDataUseCase)
     factoryOf(::ImportPersonasUseCase)
-    factory { BuildReportUseCase(get(), get(), get(), get(), get(), get()) }
-    factoryOf(::GenerarExamenUseCase)
-    factoryOf(::CalcularResultadoExamenUseCase)
+    factory { BuildReportUseCase(get(), get(), get(), get(), get(), get(), get()) }
 }
 
 val presentationModule = module {
-    viewModel { LoginViewModel(get(), get(), get()) }
+    viewModel { LoginViewModel(get(), get(), get(), get()) }
     viewModelOf(::PorteriaViewModel)
     viewModelOf(::BicicleteroViewModel)
     viewModelOf(::AdminViewModel)
     viewModelOf(::ShiftReportsViewModel)
+    viewModelOf(::ControlPointsViewModel)
     viewModelOf(::DirectoryViewModel)
     viewModel { SettingsViewModel(get()) }
-    viewModel { params -> ExamenViewModel(get(), get(), guardiaNombre = params.get()) }
 }
 
 val appModules = listOf(dataModule, domainModule, presentationModule)

@@ -19,15 +19,21 @@ import com.dur1al.controlate.porteria.domain.usecase.StartShiftUseCase
 import com.dur1al.controlate.porteria.domain.usecase.ValidateRegistroUseCase
 import com.dur1al.controlate.porteria.testing.FakeBikeEntryRepository
 import com.dur1al.controlate.porteria.testing.FakeClock
+import com.dur1al.controlate.porteria.testing.FakeControlPointRepository
 import com.dur1al.controlate.porteria.testing.FakePersonaRepository
 import com.dur1al.controlate.porteria.testing.FakeSessionStore
 import com.dur1al.controlate.porteria.testing.FakeShiftRepository
 import com.dur1al.controlate.porteria.testing.FakeVehicleEntryRepository
 import com.dur1al.controlate.porteria.testing.MainDispatcherRule
+import com.dur1al.controlate.porteria.testing.Points
 import com.dur1al.controlate.porteria.ui.common.UiMessage
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -49,13 +55,13 @@ class PorteriaViewModelTest {
     )
     private val exported = mutableListOf<String>()
     private val labels = object : ReportLabels {
-        override fun controlPoint(id: String) = id
+        override fun unknownControlPoint(id: String) = id
         override fun personaType(code: String) = code
         override fun shiftType(code: String) = code
     }
 
     private suspend fun openShift(): Long =
-        (StartShiftUseCase(shifts, session, clock)("Guardia", ControlPoint.PORTERIA_2, ShiftType.DAY) as StartShiftUseCase.Outcome.Started).turno.id
+        (StartShiftUseCase(shifts, session, clock)("Guardia", Points.PORTERIA_1, ShiftType.DAY) as StartShiftUseCase.Outcome.Started).turno.id
 
     private fun viewModel() = PorteriaViewModel(
         getActiveShift = GetActiveShiftUseCase(shifts, session),
@@ -64,8 +70,10 @@ class PorteriaViewModelTest {
         findPersona = FindPersonaUseCase(personas, bikes),
         entries = vehicles,
         closeShift = EndShiftUseCase(shifts, session, clock),
-        buildReport = BuildReportUseCase(shifts, vehicles, bikes, personas, labels, clock),
-        exporter = ReportExporter { doc -> exported += doc.fileStem; File(doc.fileStem) }
+        buildReport = BuildReportUseCase(shifts, vehicles, bikes, personas, FakeControlPointRepository(), labels, clock),
+        exporter = ReportExporter { doc -> exported += doc.fileStem; File(doc.fileStem) },
+        validator = ValidateRegistroUseCase(),
+        controlPoints = FakeControlPointRepository()
     )
 
     private fun input(patente: String = "NEW123") = VehicleEntryInput(
@@ -117,6 +125,7 @@ class PorteriaViewModelTest {
         openShift()
         val vm = viewModel()
         vm.register(input())
+        assertEquals(PorteriaViewModel.Event.Message(UiMessage(R.string.entry_registered)), vm.events.first())
         val registro = vm.state.value.registros.single()
 
         vm.markExit(registro)
@@ -126,6 +135,67 @@ class PorteriaViewModelTest {
 
         vm.undoExit(event.id, event.at)
         assertNull(vm.state.value.registros.single().salidaAt)
+    }
+
+    @Test
+    fun `saving confirms on the screen and re-enables the form`() = runTest {
+        openShift()
+        val vm = viewModel()
+        vm.register(input())
+
+        assertEquals(PorteriaViewModel.Event.Message(UiMessage(R.string.entry_registered)), vm.events.first())
+        assertFalse(vm.formSaving.value)
+    }
+
+    @Test
+    fun `registering a plate that is already inside shows a field error`() = runTest {
+        openShift()
+        val vm = viewModel()
+        vm.register(input())
+        vm.register(input())
+
+        assertEquals(listOf(ValidationError(ValidationError.Field.PATENTE, ValidationError.Reason.ALREADY_INSIDE)), vm.formErrors.value)
+        assertEquals(1, vehicles.rows.value.size)
+    }
+
+    @Test
+    fun `a storage failure is reported in the form instead of crashing`() = runTest {
+        openShift()
+        val vm = viewModel()
+        vehicles.failInsert = true
+        vm.register(input())
+
+        assertEquals(PorteriaViewModel.FormEvent.Failed(UiMessage(R.string.error_save_entry)), vm.formEvents.first())
+        assertFalse(vm.formSaving.value)
+    }
+
+    @Test
+    fun `fixing a field clears only its own error`() = runTest {
+        openShift()
+        val vm = viewModel()
+        vm.register(input("X").copy(nombre = ""))
+        assertEquals(2, vm.formErrors.value.size)
+
+        vm.clearFieldError(ValidationError.Field.PATENTE)
+
+        assertEquals(listOf(ValidationError.Field.NOMBRE), vm.formErrors.value.map { it.field })
+    }
+
+    @Test
+    fun `the same person is autofilled once per open form`() = runTest {
+        openShift()
+        val vm = viewModel()
+        val received = mutableListOf<PorteriaViewModel.FormEvent>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.formEvents.toList(received) }
+
+        vm.onFormOpened()
+        vm.lookupPlate("DEMO01")
+        vm.lookupRut("11.111.111-1")
+        assertEquals(1, received.size)
+
+        vm.onFormOpened()
+        vm.lookupPlate("DEMO01")
+        assertEquals(2, received.size)
     }
 
     @Test
@@ -156,12 +226,36 @@ class PorteriaViewModelTest {
             RegisterVehicleEntryUseCase(ValidateRegistroUseCase(), vehicles, personas, clock),
             MarkExitUseCase(vehicles, bikes, clock), FindPersonaUseCase(personas, bikes), vehicles,
             EndShiftUseCase(shifts, session, clock),
-            BuildReportUseCase(shifts, vehicles, bikes, personas, labels, clock),
-            ReportExporter { error("disk full") }
+            BuildReportUseCase(shifts, vehicles, bikes, personas, FakeControlPointRepository(), labels, clock),
+            ReportExporter { error("disk full") },
+            ValidateRegistroUseCase(),
+            FakeControlPointRepository()
         )
         vm.endShift()
         assertEquals(PorteriaViewModel.Event.Message(UiMessage(R.string.error_generic)), vm.events.first())
         assertEquals(PorteriaViewModel.Event.ShiftEnded, vm.events.first())
         assertTrue(shifts.get(id)!!.finalizadoAt != null)
+    }
+
+    @Test
+    fun `leaving a field shows format errors but not required ones`() = runTest {
+        openShift()
+        val vm = viewModel()
+
+        vm.onFieldBlur(ValidationError.Field.NOMBRE, "  ")
+        assertTrue(vm.formErrors.value.isEmpty())
+
+        vm.onFieldBlur(ValidationError.Field.RUT, "12.345.678-4")
+        vm.onFieldBlur(ValidationError.Field.PATENTE, "AB1")
+        assertEquals(
+            setOf(
+                ValidationError(ValidationError.Field.RUT, ValidationError.Reason.INVALID_FORMAT),
+                ValidationError(ValidationError.Field.PATENTE, ValidationError.Reason.INVALID_FORMAT)
+            ),
+            vm.formErrors.value.toSet()
+        )
+
+        vm.onFieldBlur(ValidationError.Field.RUT, "12.345.678-5")
+        assertEquals(listOf(ValidationError.Field.PATENTE, ValidationError.Field.RUT), vm.formErrors.value.map { it.field }.sorted())
     }
 }
