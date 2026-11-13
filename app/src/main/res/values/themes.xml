@@ -1,0 +1,36 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Theme.Controlate" parent="Theme.Material3.Dark.NoActionBar">
+        <!-- Palette Colors -->
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryDark">@color/bicicletero1_variant</item>
+        <item name="colorSecondary">@color/bicicletero1_variant</item>
+        <item name="colorSurface">@color/surface</item>
+        <item name="colorOnSurface">@color/text_main</item>
+        <item name="android:windowBackground">@color/background</item>
+        <item name="android:navigationBarColor">@color/background</item>
+        <item name="android:statusBarColor">@color/surface</item>
+        <item name="android:windowLightStatusBar">false</item>
+
+        <!-- Input Fields -->
+        <item name="colorOutline">@color/text_hint</item>
+        <item name="colorControlNormal">@color/white</item>
+        <item name="colorControlActivated">@color/bicicletero1_primary</item>
+        <item name="android:fontFamily">@font/nunito</item>
+        <item name="fontFamily">@font/nunito</item>
+
+        <item name="android:alertDialogTheme">@style/Theme.Controlate.Dialog</item>
+    </style>
+
+    <style name="Theme.Controlate.Dialog" parent="ThemeOverlay.Material3.Dialog">
+        <item name="android:background">@color/surface_variant</item>
+        <item name="android:textColorPrimary">@color/text_main</item>
+    </style>
+
+    <style name="Theme_Controlate_BottomSheet" parent="ThemeOverlay.Material3.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/Theme.Controlate.BottomSheetStyle</item>
+    </style>
+
+    <style name="Theme.Controlate.BottomSheetStyle" parent="Widget.Design.BottomSheet.Modal">
+        <item name="android:background">@color/background</item>
+    </style>
+</resources>

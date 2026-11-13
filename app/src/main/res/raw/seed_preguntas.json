@@ -1,0 +1,602 @@
+[
+  {
+    "pregunta": "¿Cuál es el marco regulatorio principal que rige la Seguridad Privada en Chile para guardias de seguridad?",
+    "opcionA": "Ley de Caza y Pesca",
+    "opcionB": "Decreto Ley 3.607 y sus reglamentos (D.S. 1773 / D.S. 867)",
+    "opcionC": "Ley Orgánica de Municipalidades",
+    "opcionD": "Código Penal Artículo 100",
+    "respuestaCorrecta": 1,
+    "categoria": "Normativa Legal OS-10",
+    "explicacion": "El D.L. 3.607 fija normas sobre funcionamiento de vigilancia privada y seguridad."
+  },
+  {
+    "pregunta": "¿Qué entidad fiscalizadora es la encargada de normar, controlar y supervisar la Seguridad Privada en Chile?",
+    "opcionA": "Ministerio de Educación",
+    "opcionB": "Carabineros de Chile a través de la Autoridad Fiscalizadora (Prefectura OS-10)",
+    "opcionC": "Servicio de Impuestos Internos (SII)",
+    "opcionD": "Policía de Investigaciones únicamente",
+    "respuestaCorrecta": 1,
+    "categoria": "Normativa Legal OS-10",
+    "explicacion": "Carabineros de Chile ejercen la fiscalización de las actividades de seguridad privada mediante OS-10."
+  },
+  {
+    "pregunta": "¿Cuál es la vigencia acreditada de la credencial / curso de Guardia de Seguridad OS-10?",
+    "opcionA": "1 año",
+    "opcionB": "2 años",
+    "opcionC": "3 años",
+    "opcionD": "5 años",
+    "respuestaCorrecta": 2,
+    "categoria": "Normativa Legal OS-10",
+    "explicacion": "La credencial de Guardia de Seguridad tiene una vigencia de 3 años, debiendo realizar reentrenamiento."
+  },
+  {
+    "pregunta": "¿Un Guardia de Seguridad sin armamento autorizado puede portar armas de fuego durante sus funciones?",
+    "opcionA": "Sí, si el guardia lo considera necesario",
+    "opcionB": "Sí, en horario nocturno",
+    "opcionC": "No, está estrictamente prohibido y sancionado por ley",
+    "opcionD": "Solo si es en recintos abiertos",
+    "respuestaCorrecta": 2,
+    "categoria": "Normativa Legal OS-10",
+    "explicacion": "El Guardia de Seguridad cumple funciones sin armas de fuego a menos que la directiva de funcionamiento autorice expresamente vigilantes privados con armas."
+  },
+  {
+    "pregunta": "¿Cuál es el porcentaje mínimo de aprobación requerido en el examen oficial de Carabineros OS-10?",
+    "opcionA": "50%",
+    "opcionB": "60%",
+    "opcionC": "70%",
+    "opcionD": "80%",
+    "respuestaCorrecta": 2,
+    "categoria": "Normativa Legal OS-10",
+    "explicacion": "Se requiere un mínimo de 70% de respuestas correctas (42 de 60 preguntas) para aprobar."
+  },
+  {
+    "pregunta": "¿Qué diferencia legal fundamental existe entre un Vigilante Privado (VV.PP.) y un Guardia de Seguridad (GG.SS.)?",
+    "opcionA": "El Guardia gana más sueldo",
+    "opcionB": "El Vigilante Privado porta arma de fuego y trabaja en entidades obligadas según directiva",
+    "opcionC": "El Guardia de Seguridad pertenece a las Fuerzas Armadas",
+    "opcionD": "No existe ninguna diferencia",
+    "respuestaCorrecta": 1,
+    "categoria": "Normativa Legal OS-10",
+    "explicacion": "Los Vigilantes Privados (D.L. 3607) portan armas dentro de sus recintos autorizados, los GG.SS. realizan funciones de protección sin armas."
+  },
+  {
+    "pregunta": "¿A quién debe informar inmediatamente un guardia de seguridad en caso de presenciar un delito flagrante?",
+    "opcionA": "A los medios de comunicación",
+    "opcionB": "A Carabineros / PDI y a la jefatura directa de la instalación",
+    "opcionC": "A los vecinos del sector",
+    "opcionD": "A las redes sociales",
+    "respuestaCorrecta": 1,
+    "categoria": "Procedimientos Operativos",
+    "explicacion": "En caso de delito flagrante se debe dar aviso inmediato a las fuerzas de orden y a la central de operaciones."
+  },
+  {
+    "pregunta": "¿Qué es la detención en flagrancia por parte de un ciudadano o guardia de seguridad según el Código Procesal Penal?",
+    "opcionA": "El derecho a juzgar a una persona en el lugar",
+    "opcionB": "La facultad de aprehender a quien es sorprendido cometiendo un delito y entregarlo de inmediato a las policías",
+    "opcionC": "Interrogar al sospechoso durante 24 horas",
+    "opcionD": "Confiscar sus bienes permanentemente",
+    "respuestaCorrecta": 1,
+    "categoria": "Normativa Legal OS-10",
+    "explicacion": "Cualquier ciudadano (incluyendo el GG.SS.) puede detener a quien es sorprendido en delito flagrante para entregarlo inmediatamente a la policía."
+  },
+  {
+    "pregunta": "¿Cuál es la función principal de la Directiva de Funcionamiento en un puesto de control o instalación?",
+    "opcionA": "Establecer la carta de menú del personal",
+    "opcionB": "Documento aprobado por la Autoridad Fiscalizadora que regula la dotación, puesto, sistema de comunicación y turnos de la instalación",
+    "opcionC": "Indicar el horario de movilización pública",
+    "opcionD": "Un contrato de arrendamiento",
+    "respuestaCorrecta": 1,
+    "categoria": "Normativa Legal OS-10",
+    "explicacion": "La Directiva de Funcionamiento autorizada por OS-10 regula legalmente el servicio de seguridad de la instalación."
+  },
+  {
+    "pregunta": "En prevención de riesgos, ¿qué significa la sigla EPP?",
+    "opcionA": "Equipo de Protección Personal",
+    "opcionB": "Estructura de Prevención Primaria",
+    "opcionC": "Evaluación de Procedimientos Policiales",
+    "opcionD": "Elementos de Patrullaje Preventivo",
+    "respuestaCorrecta": 0,
+    "categoria": "Prevención de Riesgos",
+    "explicacion": "EPP corresponde a Elementos de Protección Personal."
+  },
+  {
+    "pregunta": "¿Qué extintor es el más adecuado para combatir fuego de clase C (equipos eléctricos energizados)?",
+    "opcionA": "Agua a presión",
+    "opcionB": "Polvo Químico Seco (PQS) o Dióxido de Carbono (CO2)",
+    "opcionC": "Espuma AFFF únicamente",
+    "opcionD": "Arena mojada",
+    "respuestaCorrecta": 1,
+    "categoria": "Prevención de Riesgos",
+    "explicacion": "Los extintores PQS y CO2 no son conductores de electricidad, indicados para fuego clase C."
+  },
+  {
+    "pregunta": "¿Cuál es la primera acción ante una emergencia de conato de incendio en un edificio?",
+    "opcionA": "Buscar pertenencias personales",
+    "opcionB": "Dar la alarma, dar aviso a bomberos y activar los protocolos de evacuación e incendio",
+    "opcionC": "Subir a la azotea",
+    "opcionD": "Abrir todas las ventanas para ventilación",
+    "respuestaCorrecta": 1,
+    "categoria": "Prevención de Riesgos",
+    "explicacion": "La detección temprana y aviso a Bomberos / activación de alarma evita la propagación del fuego y pérdidas humanas."
+  },
+  {
+    "pregunta": "¿En primeros auxilios, qué significan las siglas R.C.P.?",
+    "opcionA": "Respiración Controlada y Pulso",
+    "opcionB": "Reanimación Cardiopulmonar",
+    "opcionC": "Revisión Corporal Primaria",
+    "opcionD": "Rescate Con Protección",
+    "respuestaCorrecta": 1,
+    "categoria": "Primeros Auxilios",
+    "explicacion": "RCP es Reanimación Cardiopulmonar, maniobra clave ante paro cardiorrespiratorio."
+  },
+  {
+    "pregunta": "¿Cuál es el número de emergencia telefónico para comunicarse con Carabineros de Chile?",
+    "opcionA": "131",
+    "opcionB": "132",
+    "opcionC": "133",
+    "opcionD": "134",
+    "respuestaCorrecta": 2,
+    "categoria": "Procedimientos Operativos",
+    "explicacion": "133 Carabineros, 131 Ambulancia (SAMU), 132 Bomberos, 134 PDI."
+  },
+  {
+    "pregunta": "¿Cuál es el número telefónico de emergencia para llamar a SAMU (Ambulancia)?",
+    "opcionA": "131",
+    "opcionB": "132",
+    "opcionC": "133",
+    "opcionD": "134",
+    "respuestaCorrecta": 0,
+    "categoria": "Procedimientos Operativos",
+    "explicacion": "131 es la línea de atención de urgencias médicas (SAMU)."
+  },
+  {
+    "pregunta": "¿Cuál es la función del control de acceso en una instalación o portería?",
+    "opcionA": "Cobrar peajes obligatorios",
+    "opcionB": "Verificar la identidad, autorizar el ingreso de personas/vehículos y registrar sus movimientos",
+    "opcionC": "Realizar ventas comerciales",
+    "opcionD": "Impedir el paso a todo público en todo momento",
+    "respuestaCorrecta": 1,
+    "categoria": "Procedimientos Operativos",
+    "explicacion": "El control de acceso garantiza la trazabilidad y la seguridad del recinto mediante verificación de identidad."
+  },
+  {
+    "pregunta": "¿Qué documento debe portar obligatoriamente el guardia de seguridad durante su turno de servicio?",
+    "opcionA": "Licencia de conducir internacional",
+    "opcionB": "Credencial física OS-10 vigente otorgada por la Autoridad Fiscalizadora y Cédula de Identidad",
+    "opcionC": "Certificado de residencia",
+    "opcionD": "Pasaporte diplomático",
+    "respuestaCorrecta": 1,
+    "categoria": "Normativa Legal OS-10",
+    "explicacion": "Durante el servicio es obligatorio portar la credencial OS-10 vigente junto a la Cédula de Identidad."
+  },
+  {
+    "pregunta": "¿Qué es la legítima defensa contemplada en el Código Penal chileno?",
+    "opcionA": "El derecho de agredir a cualquier sospechoso",
+    "opcionB": "Eximente de responsabilidad ante una agresión ilegítima, con necesidad racional del medio empleado y falta de provocación suficiente",
+    "opcionC": "Un permiso especial de la municipalidad",
+    "opcionD": "La facultad de vengar hechos pasados",
+    "respuestaCorrecta": 1,
+    "categoria": "Normativa Legal OS-10",
+    "explicacion": "Requiere agresión ilegítima, necesidad racional del medio para impedirla o repelerla y falta de provocación."
+  },
+  {
+    "pregunta": "¿Un Guardia de Seguridad puede realizar un registro de vestimentas o revisión física intrusiva a un cliente o visitante?",
+    "opcionA": "Sí, siempre que le parezca sospechoso",
+    "opcionB": "No, carece de facultades legales para registrar corporalmente a las personas",
+    "opcionC": "Sí, si cuenta con una linterna",
+    "opcionD": "Sí, en lugares oscuros",
+    "respuestaCorrecta": 1,
+    "categoria": "Normativa Legal OS-10",
+    "explicacion": "El GG.SS. no tiene facultades para realizar registros corporales; solo las policías bajo el Código Procesal Penal."
+  },
+  {
+    "pregunta": "¿Qué se debe registrar en el Libro de Novedades de la portería?",
+    "opcionA": "Solo la hora de colación",
+    "opcionB": "Toda incidencia relevante, relevos, inspecciones, entregas de turno, anomalías y visitas",
+    "opcionC": "Noticias del periódico local",
+    "opcionD": "Recetas de cocina",
+    "respuestaCorrecta": 1,
+    "categoria": "Procedimientos Operativos",
+    "explicacion": "El Libro de Novedades es un registro legal e inmutable del turno operativo."
+  },
+  {
+    "pregunta": "¿Cuál es la norma chilena relativa a extintores portátiles y su clasificación de fuego?",
+    "opcionA": "NCh 1430 / NCh 934",
+    "opcionB": "NCh 44",
+    "opcionC": "NCh 1500",
+    "opcionD": "NCh 2000",
+    "respuestaCorrecta": 0,
+    "categoria": "Prevención de Riesgos",
+    "explicacion": "NCh 1430 establece los requisitos de rotulación y clasificación de extintores."
+  },
+  {
+    "pregunta": "Fuego Clase A corresponde a combustibles de tipo:",
+    "opcionA": "Líquidos inflamables (Gasolina, aceites)",
+    "opcionB": "Materiales sólidos comunes que dejan brasas (Madera, papel, cartón, género)",
+    "opcionC": "Equipos eléctricos energizados",
+    "opcionD": "Metales combustibles (Magnesio, sodio)",
+    "respuestaCorrecta": 1,
+    "categoria": "Prevención de Riesgos",
+    "explicacion": "Clase A: Sólidos orgánicos combustibles que dejan cenizas y brasas."
+  },
+  {
+    "pregunta": "Fuego Clase B corresponde a combustibles de tipo:",
+    "opcionA": "Maderas y telas",
+    "opcionB": "Líquidos y gases inflamables (Kerosene, bencina, pintura, solventes)",
+    "opcionC": "Cables eléctricos",
+    "opcionD": "Grasas y aceites de cocina",
+    "respuestaCorrecta": 1,
+    "categoria": "Prevención de Riesgos",
+    "explicacion": "Clase B: Líquidos y gases inflamables."
+  },
+  {
+    "pregunta": "En un circuito cerrado de televisión (CCTV), ¿cuál es el objetivo principal del monitoreo?",
+    "opcionA": "Entretener al personal de guardia",
+    "opcionB": "Prevención, detección temprana de intromisiones e investigación de eventos de seguridad",
+    "opcionC": "Transmitir señal pública de televisión",
+    "opcionD": "Medir la temperatura ambiental",
+    "respuestaCorrecta": 1,
+    "categoria": "Sistemas de Seguridad",
+    "explicacion": "CCTV proporciona vigilancia continua para prevenir delitos y resguardar la instalación."
+  },
+  {
+    "pregunta": "¿Qué actitud debe mantener un Guardia de Seguridad ante una situación de conflicto o provocación verbal?",
+    "opcionA": "Responder con insultos similares",
+    "opcionB": "Mantener la calma, comunicación asertiva, desescalar la situación y aplicar el protocolo formal",
+    "opcionC": "Abandonar el puesto de trabajo de inmediato",
+    "opcionD": "Uso inmediato de fuerza física",
+    "respuestaCorrecta": 1,
+    "categoria": "Relaciones Humanas y Manejo de Crisis",
+    "explicacion": "El manejo de conflictos exige profesionalismo, control emocional y aplicación de protocolos de desescalamiento."
+  },
+  {
+    "pregunta": "¿Qué se debe verificar al revisar la Cédula de Identidad en un control de acceso?",
+    "opcionA": "El color favorito del visitante",
+    "opcionB": "Vigencia del documento, coincidencia de foto, nombre, RUT y estado físico del documento",
+    "opcionC": "El signo zodiacal",
+    "opcionD": "Solo si es chileno o extranjero",
+    "respuestaCorrecta": 1,
+    "categoria": "Procedimientos Operativos",
+    "explicacion": "Permite autenticar la identidad real de quien ingresa al recinto."
+  },
+  {
+    "pregunta": "¿Qué es la seguridad privada de acuerdo con los conceptos de la disciplina?",
+    "opcionA": "El uso exclusivo de la fuerza por privados",
+    "opcionB": "El conjunto de actividades, bienes y medidas orientadas a la protección de personas y bienes privados en forma complementaria a la seguridad pública",
+    "opcionC": "Un servicio sustituto de las Fuerzas Armadas",
+    "opcionD": "La vigilancia informal de vecinos",
+    "respuestaCorrecta": 1,
+    "categoria": "Normativa Legal OS-10",
+    "explicacion": "La seguridad privada es subordinada y complementaria a la seguridad pública ejercida por las policías del Estado."
+  },
+  {
+    "pregunta": "¿Ante quién responde el guardia de seguridad por las novedades ocurridas durante su turno?",
+    "opcionA": "Ante el público general",
+    "opcionB": "Ante su Supervisor, Jefe de Seguridad de la empresa y la Autoridad Fiscalizadora según corresponda",
+    "opcionC": "Solo ante sus compañeros de turno",
+    "opcionD": "Ante la municipalidad del sector",
+    "respuestaCorrecta": 1,
+    "categoria": "Procedimientos Operativos",
+    "explicacion": "Existe una cadena de mando definida tanto en la empresa prestadora como en la entidad contratante."
+  },
+  {
+    "pregunta": "¿Qué debe hacerse ante la sospecha de un paquete o bulto abandonado sospechoso de contener un artefacto explosivo?",
+    "opcionA": "Moverlo o abrirlo para revisar su contenido",
+    "opcionB": "No tocar, aislar la zona, evacuar preventivamente y llamar de inmediato al 133 (GOPE de Carabineros)",
+    "opcionC": "Llevarlo al casillero de guardias",
+    "opcionD": "Echarle agua con una manguera",
+    "respuestaCorrecta": 1,
+    "categoria": "Procedimientos Operativos",
+    "explicacion": "Ante un objeto sospechoso nunca debe manipularse; se debe aislar el perímetro y avisar al GOPE."
+  },
+  {
+    "pregunta": "¿Qué significa la sigla GOPE en Carabineros de Chile?",
+    "opcionA": "Grupo de Operaciones Policiales Especiales",
+    "opcionB": "Guardias Operativos de Protección Empresarial",
+    "opcionC": "Gabinete Oficial de Peritajes Especiales",
+    "opcionD": "Grupo Organizado de Prevención Estatal",
+    "respuestaCorrecta": 0,
+    "categoria": "Normativa Legal OS-10",
+    "explicacion": "GOPE: Grupo de Operaciones Policiales Especiales."
+  },
+  {
+    "pregunta": "¿Qué información crítica debe obtener un guardia al recibir una llamada con amenaza de bomba?",
+    "opcionA": "Detalles del sonido de fondo, hora estimada, ubicación del artefacto, tipo de voz y lenguaje utilizado",
+    "opcionB": "Consultar si tiene saldo de recarga",
+    "opcionC": "Pedir el rut para facturación",
+    "opcionD": "Colgar de inmediato sin escuchar",
+    "respuestaCorrecta": 0,
+    "categoria": "Procedimientos Operativos",
+    "explicacion": "Se debe escuchar atentamente, anotar características del llamado y avisar inmediatamente a Carabineros."
+  },
+  {
+    "pregunta": "¿A qué se refiere la 'cadena de custodia' de un sitio del suceso?",
+    "opcionA": "Al candado puesto en la reja principal",
+    "opcionB": "Procedimiento de protección y preservación inalterada de evidencias y del lugar donde ocurrió un delito para su peritaje policial",
+    "opcionC": "El turno rotativo de noche",
+    "opcionD": "El listado de llaves de la portería",
+    "respuestaCorrecta": 1,
+    "categoria": "Procedimientos Operativos",
+    "explicacion": "Preservar el sitio del suceso sin alterar rastros ni evidencias hasta que arribe personal policial especializado."
+  },
+  {
+    "pregunta": "Si un guardia atiende a una persona inconsciente que no respira, ¿cuál es la primera acción de primeros auxilios recomendada?",
+    "opcionA": "Darle agua con azúcar",
+    "opcionB": "Pedir ayuda médica urgente (131) e iniciar compresiones torácicas (RCP)",
+    "opcionC": "Mover bruscamente el cuello de la persona",
+    "opcionD": "Taparla con mantas pesadas y esperar",
+    "respuestaCorrecta": 1,
+    "categoria": "Primeros Auxilios",
+    "explicacion": "Llamar a urgencia e iniciar RCP precoz rescata la perfusión cerebral en paro cardiorrespiratorio."
+  },
+  {
+    "pregunta": "¿Qué es la Zona de Seguridad en un Plan de Evacuación?",
+    "opcionA": "El casino de la empresa",
+    "opcionB": "Lugar previamente determinado, despejado de riesgos, donde deben concentrarse las personas durante una evacuación",
+    "opcionC": "La sala de servidores computacionales",
+    "opcionD": "El estacionamiento subterráneo -2",
+    "respuestaCorrecta": 1,
+    "categoria": "Prevención de Riesgos",
+    "explicacion": "Punto de encuentro seguro alejado de colapsos estructurales o incendios."
+  },
+  {
+    "pregunta": "¿Qué significa el triángulo del fuego?",
+    "opcionA": "Tres guardias de turno",
+    "opcionB": "Modelado de los tres elementos necesarios para la combustión: Combustible, Comburente (Oxígeno) y Calor",
+    "opcionC": "Tres tipos de alarma sísmica",
+    "opcionD": "Estructura de una manguera de bomberos",
+    "respuestaCorrecta": 1,
+    "categoria": "Prevención de Riesgos",
+    "explicacion": "Combustible + Oxígeno + Calor = Fuego. Al eliminar uno se extingue la llama."
+  },
+  {
+    "pregunta": "¿Qué elemento se añade al triángulo del fuego para constituir el 'Tetraedro del fuego'?",
+    "opcionA": "Agua a alta presión",
+    "opcionB": "La reacción en cadena",
+    "opcionC": "Humo denso",
+    "opcionD": "Monóxido de carbono",
+    "respuestaCorrecta": 1,
+    "categoria": "Prevención de Riesgos",
+    "explicacion": "El tetraedro suma la reacción química en cadena autosostenida."
+  },
+  {
+    "pregunta": "¿Cuál es la sanción legal para una empresa o persona que presta servicios de seguridad sin contar con la autorización de OS-10?",
+    "opcionA": "Felicidades por iniciativa privada",
+    "opcionB": "Infracciones, clausura del recinto y sanciones penales/administrativas según D.L. 3607",
+    "opcionC": "Un descuento en impuestos",
+    "opcionD": "No existe sanción alguna",
+    "respuestaCorrecta": 1,
+    "categoria": "Normativa Legal OS-10",
+    "explicacion": "Prestaciones clandestinas o no autorizadas conllevan severas multas e investigaciones penales."
+  },
+  {
+    "pregunta": "¿Cómo se debe realizar la entrega de turno entre guardias saliente e entrante?",
+    "opcionA": "Dejar el puesto solo y enviar un mensaje informal",
+    "opcionB": "Revisar en conjunto el recinto, novedades pendientes, llaves, equipos de radio e inventario, firmando el libro de control",
+    "opcionC": "Irse 15 minutos antes sin decir nada",
+    "opcionD": "Dejar las llaves tiradas en la mesa",
+    "respuestaCorrecta": 1,
+    "categoria": "Procedimientos Operativos",
+    "explicacion": "La entrega de turno garantiza la continuidad operacional y deslinda responsabilidades en el libro de novedades."
+  },
+  {
+    "pregunta": "¿Qué es la seguridad física en una instalación?",
+    "opcionA": "Los ejercicios gimnásticos del guardia",
+    "opcionB": "Conjunto de barreras naturales, mecánicas, electrónicas y humanas destinadas a proteger los recursos contra amenazas externas e internas",
+    "opcionC": "El seguro de vida contratado",
+    "opcionD": "El aspecto corporal de los trabajadores",
+    "respuestaCorrecta": 1,
+    "categoria": "Sistemas de Seguridad",
+    "explicacion": "Comprende vallas, cerraduras, CCTV, iluminación, sensores y personal de seguridad."
+  },
+  {
+    "pregunta": "¿Cuál es la distancia recomendada para aproximarse con un extintor PQS a un conato de fuego?",
+    "opcionA": "A 10 metros de distancia",
+    "opcionB": "Entre 2 y 3 metros del fuego, a favor del viento",
+    "opcionC": "Pegado a la llama a 10 centímetros",
+    "opcionD": "Desde la azotea del edificio",
+    "respuestaCorrecta": 1,
+    "categoria": "Prevención de Riesgos",
+    "explicacion": "Atacar la base del fuego a favor del viento a una distancia segura de 2-3 metros."
+  },
+  {
+    "pregunta": "¿Qué se entiende por 'Vigilante Privado' segun el D.S. 1773?",
+    "opcionA": "Cualquier persona con chaleco reflectante",
+    "opcionB": "Personal con contrato que presta servicios de protección armada en entidades obligadas o autorizadas por decreto",
+    "opcionC": "Inspector municipal de tránsito",
+    "opcionD": "Un conserje de condominio",
+    "respuestaCorrecta": 1,
+    "categoria": "Normativa Legal OS-10",
+    "explicacion": "Los VV.PP. son empleados con régimen de protección armada en entidades consideradas estratégicas."
+  },
+  {
+    "pregunta": "¿Qué debe verificar un guardia al recibir una carga o transporte de mercadería en bodega?",
+    "opcionA": "Guía de despacho o factura, patente del vehículo, identidad del chofer y sellos de seguridad",
+    "opcionB": "El valor comercial de la carga únicamente",
+    "opcionC": "Si el chofer trae colación",
+    "opcionD": "Nada, el acceso a bodegas es libre",
+    "respuestaCorrecta": 0,
+    "categoria": "Procedimientos Operativos",
+    "explicacion": "El cotejo documental y físico previene mermas o accesos no autorizados."
+  },
+  {
+    "pregunta": "¿En caso de una quemadura de segundo grado con ampollas, qué debe aplicarse como primer auxilio inmediato?",
+    "opcionA": "Pasta de dientes o aceite vegetal",
+    "opcionB": "Enfriar con abundante agua limpia a temperatura ambiente y cubrir con gasa estéril",
+    "opcionC": "Reventar las ampollas inmediatamente",
+    "opcionD": "Aplicar sal de cocina",
+    "respuestaCorrecta": 1,
+    "categoria": "Primeros Auxilios",
+    "explicacion": "Jamás reventar ampollas ni usar remedios caseros; solo agua limpia y curación plana estéril."
+  },
+  {
+    "pregunta": "¿Qué significa la sigla PDI?",
+    "opcionA": "Protección Doméstica de Incendios",
+    "opcionB": "Policía de Investigaciones de Chile",
+    "opcionC": "Patrulla Digital Interurbana",
+    "opcionD": "Plan De Inspección",
+    "respuestaCorrecta": 1,
+    "categoria": "Normativa Legal OS-10",
+    "explicacion": "PDI es la Policía de Investigaciones de Chile."
+  },
+  {
+    "pregunta": "¿Qué es la modulación R.T. (Radiocomunicaciones) en frecuencia operativa?",
+    "opcionA": "Conversar libremente sobre asuntos personales",
+    "opcionB": "Uso de lenguaje claro, conciso, códigos estandarizados y brevedad para no saturar el canal de emergencia",
+    "opcionC": "Escuchar música de radio FM",
+    "opcionD": "Uso de gritos para mayor volumen",
+    "respuestaCorrecta": 1,
+    "categoria": "Procedimientos Operativos",
+    "explicacion": "El canal de radio debe permanecer limpio y operativo respetando el protocolo de comunicaciones."
+  },
+  {
+    "pregunta": "El concepto de 'Vulnerabilidad' en seguridad se refiere a:",
+    "opcionA": "La fortaleza de un muro de hormigón",
+    "opcionB": "Debilidad, falencia o punto ciego que puede ser aprovechado por una amenaza para causar un daño",
+    "opcionC": "La cantidad de cámaras instaladas",
+    "opcionD": "El costo del sistema de alarma",
+    "respuestaCorrecta": 1,
+    "categoria": "Sistemas de Seguridad",
+    "explicacion": "Vulnerabilidad es la condición interna que expone la instalación a riesgos o intrusiones."
+  },
+  {
+    "pregunta": "¿Qué es un Plan de Contingencia?",
+    "opcionA": "El menú semanal de la instalación",
+    "opcionB": "Conjunto de procedimientos preestablecidos para actuar ante situaciones de riesgo no habituales o emergencias",
+    "opcionC": "El horario de descanso del personal",
+    "opcionD": "El presupuesto de finanzas",
+    "respuestaCorrecta": 1,
+    "categoria": "Prevención de Riesgos",
+    "explicacion": "Planifica las acciones operativas inmediatas ante eventos críticos imprevistos."
+  },
+  {
+    "pregunta": "¿Cuál es la conducta adecuada al detectar a un individuo fotografiando reiteradamente instalaciones críticas o puntos de control sin autorización?",
+    "opcionA": "Ignorarlo por completo",
+    "opcionB": "Informar inmediatamente a la central, fiscalizar su motivo si está en recinto privado y avisar a Carabineros si se sospecha vigilado preventivo",
+    "opcionC": "Quitarle el teléfono celular a la fuerza",
+    "opcionD": "Agredir físicamente al individuo",
+    "respuestaCorrecta": 1,
+    "categoria": "Procedimientos Operativos",
+    "explicacion": "La observación y vigilancia hostil es un indicador de vulnerabilidad; se reporta respetando las atribuciones legales."
+  },
+  {
+    "pregunta": "¿En un torniquete de control peatonal, qué función cumple la tarjeta de acceso de proximidad (RFID)?",
+    "opcionA": "Medir la presión arterial",
+    "opcionB": "Identificar al usuario, validar sus permisos y registrar la hora de cruce en la base de datos",
+    "opcionC": "Encender las luces del recinto",
+    "opcionD": "Dar la hora sonora",
+    "respuestaCorrecta": 1,
+    "categoria": "Sistemas de Seguridad",
+    "explicacion": "Autenticación automática de paso mediante radiofrecuencia (RFID)."
+  },
+  {
+    "pregunta": "¿Qué es un sesgo o área ciega en un sistema de cámaras CCTV?",
+    "opcionA": "Una cámara en color blanco y negro",
+    "opcionB": "Zona o sector no cubierto por el campo visual de las cámaras de seguridad instaladas",
+    "opcionC": "El cable de alimentación eléctrica",
+    "opcionD": "El monitor de pantalla plana",
+    "respuestaCorrecta": 1,
+    "categoria": "Sistemas de Seguridad",
+    "explicacion": "Los puntos ciegos son vulnerabilidades que deben cubrirse con patrullaje o relocalización de dispositivos."
+  },
+  {
+    "pregunta": "¿Cuál es el propósito del uniforme oficial asignado al Guardia de Seguridad según la normativa OS-10?",
+    "opcionA": "Distinguir la moda de la temporada",
+    "opcionB": "Identificar claramente la función de seguridad privada, la empresa prestadora y diferenciarse de las fuerzas armadas/policiales",
+    "opcionC": "Uso libre como ropa de diario",
+    "opcionD": "Ropa de trabajo para labores agrícolas",
+    "respuestaCorrecta": 1,
+    "categoria": "Normativa Legal OS-10",
+    "explicacion": "El uniforme debe ser aprobado por OS-10, incluir parches identificatorios y no confundirse con uniformes policiales."
+  },
+  {
+    "pregunta": "¿Un Guardia de Seguridad puede ausentarse de su puesto de trabajo antes de que llegue su reemplazo?",
+    "opcionA": "Sí, si terminó su horario formal",
+    "opcionB": "No, debe permanecer en el puesto hasta la llegada del relevo o instrucción de la supervisión",
+    "opcionC": "Sí, si tiene un compromiso personal",
+    "opcionD": "Sí, los fines de semana",
+    "respuestaCorrecta": 1,
+    "categoria": "Procedimientos Operativos",
+    "explicacion": "El abandono de puesto es una falta grave que deja desprotegida la instalación."
+  },
+  {
+    "pregunta": "En caso de sismo de mayor intensidad (terremoto), ¿cuál es la instrucción prioritaria para el guardia respecto a las vías de evacuación?",
+    "opcionA": "Bloquear las puertas para evitar salidas",
+    "opcionB": "Verificar que las vías de evacuación estén despejadas y destrabadas para permitir la salida segura del público",
+    "opcionC": "Usar los ascensores del edificio",
+    "opcionD": "Correr desesperadamente al exterior",
+    "respuestaCorrecta": 1,
+    "categoria": "Prevención de Riesgos",
+    "explicacion": "Mantener las vías de escape expeditas y prohibir el uso de ascensores en sismos/incendios."
+  },
+  {
+    "pregunta": "¿Qué es la 'Defensa Propia' o 'Legítima Defensa de Terceros'?",
+    "opcionA": "Proteger a cualquier persona ante una agresión ilegítima actual o inminente cumpliendo los requisitos legales",
+    "opcionB": "Un permiso para pelear en la vía pública",
+    "opcionC": "La contratación de abogados externos",
+    "opcionD": "Un tipo de seguro de accidentes",
+    "respuestaCorrecta": 0,
+    "categoria": "Normativa Legal OS-10",
+    "explicacion": "Aplica cuando se repele una agresión injusta contra un tercero respetando la proporcionalidad."
+  },
+  {
+    "pregunta": "¿Qué acción se debe tomar ante el hallazgo de personas atrapadas en un ascensor detenido?",
+    "opcionA": "Tratar de forzar la puerta con una palanca sin conocimiento",
+    "opcionB": "Tranquilizar a los ocupantes por el citófono, cortar energía si procede y llamar a la empresa de mantención / Bomberos",
+    "opcionC": "Apagar las luces del edificio",
+    "opcionD": "Pedirles que salten dentro de la cabina",
+    "respuestaCorrecta": 1,
+    "categoria": "Procedimientos Operativos",
+    "explicacion": "Nunca forzar mecanismos sin capacitación; coordinar rescate especializado por seguridad de los pasajeros."
+  },
+  {
+    "pregunta": "¿Qué es la seguridad de la información o confidencialidad en el puesto de guardia?",
+    "opcionA": "Publicar las claves de acceso en la pizarra",
+    "opcionB": "Guardar reserva de los datos de visitas, RUT, registros, cámaras y vulnerabilidades del recinto",
+    "opcionC": "Comentar el movimiento de valores con desconocidos",
+    "opcionD": "Vender las listas de contactos",
+    "respuestaCorrecta": 1,
+    "categoria": "Procedimientos Operativos",
+    "explicacion": "La fuga de información sobre la instalación favorece la planificación de ilícitos."
+  },
+  {
+    "pregunta": "El concepto de 'Riesgo' se define formalmente como:",
+    "opcionA": "La presencia de un guardia en la garita",
+    "opcionB": "La probabilidad de que una amenaza se materialice sobre una vulnerabilidad causando impacto o pérdida",
+    "opcionC": "El sueldo percibido a fin de mes",
+    "opcionD": "La distancia entre dos garitas",
+    "respuestaCorrecta": 1,
+    "categoria": "Prevención de Riesgos",
+    "explicacion": "Riesgo = Amenaza x Vulnerabilidad x Impacto."
+  },
+  {
+    "pregunta": "¿Qué significa la sigla D.L. 3.607 en la legislación chilena de seguridad?",
+    "opcionA": "Decreto Ley número 3.607 sobre Vigilancia Privada",
+    "opcionB": "Directiva Laboral para Guardias de Salud",
+    "opcionC": "Dictamen Local para recintos deportivos",
+    "opcionD": "Decreto de Licitaciones públicas",
+    "respuestaCorrecta": 0,
+    "categoria": "Normativa Legal OS-10",
+    "explicacion": "Decreto Ley 3.607 dictado en 1981, base de la Seguridad Privada en Chile."
+  },
+  {
+    "pregunta": "¿Qué herramienta de control permite verificar la rondas efetuadas por un guardia en horario nocturno?",
+    "opcionA": "Un reloj o bastón de ronda electrónico / marcador con puntos de marcado",
+    "opcionB": "Un termómetro",
+    "opcionC": "Una linterna solar",
+    "opcionD": "El tacómetro del vehículo",
+    "respuestaCorrecta": 0,
+    "categoria": "Sistemas de Seguridad",
+    "explicacion": "Los sistemas de marcado de ronda (bastón de ronda / RFID) acreditan la inspección periódica del perímetro."
+  },
+  {
+    "pregunta": "¿Cuál es la función del chaleco reflectante en procedimientos nocturnos o de control vehicular?",
+    "opcionA": "Abrigarse del frío",
+    "opcionB": "Aumentar la visibilidad del guardia para prevenir atropellos por parte de conductores",
+    "opcionC": "Cubrir manchas de la camisa",
+    "opcionD": "Cumplir un requisito de moda militar",
+    "respuestaCorrecta": 1,
+    "categoria": "Prevención de Riesgos",
+    "explicacion": "Proporciona alta visibilidad reflectiva protegiendo la vida del operador en la vía de tránsito vehicular."
+  }
+]
