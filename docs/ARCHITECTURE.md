@@ -16,10 +16,10 @@ flowchart TB
     subgraph domain["domain/"]
         UC["UseCases"]
         CONTRACTS["repository/*, ReportExporter, ReportLabels, Clock"]
-        VAL["validation/: Rut, Patente"]
+        VAL["validation/: Rut, RutInputFormatter, Patente"]
     end
     subgraph data["data/"]
-        ROOM["Room: entities, dao, AppDatabase, Migration17To18"]
+        ROOM["Room: entities, dao, AppDatabase, migraciones"]
         REPO["Room*Repository"]
         PDFW["PdfReportWriter + ReportStore"]
         SEC["AdminPinManager + EncryptedKeyValueStore"]
@@ -111,7 +111,7 @@ sequenceDiagram
 - **Fuente única de verdad:** SQLite (Room). La sesión en `SharedPreferences` guarda solo el **id** del turno abierto; los datos del turno viven en la tabla `turnos`.
 - **Tiempo:** `entradaAt`, `salidaAt`, `iniciadoAt` y `finalizadoAt` son epoch millis. `TimeFormat` (java.time) los formatea en la zona del dispositivo. Las estadísticas diarias usan el rango `[00:00, 24:00)` local.
 - **Códigos estables:** `tipoPersona` (`PersonaType.name`), `tipo` de turno (`ShiftType.name`) y `controlPoint` (`ControlPoint.id`). Las etiquetas visibles salen de `strings.xml`, salvo el nombre del punto de control, que es un dato editable en `puntos_control`.
-- **Integridad:** FK `shiftId → turnos.id` con `ON DELETE CASCADE`; índice único en `personas.patente`; índices en `shiftId`, `entradaAt`, `rut` y `patente`.
+- **Integridad:** FK `shiftId → turnos.id` con `ON DELETE CASCADE`; índice único en `personas.patente`; índices en `shiftId`, `entradaAt`, `rut` y `patente`. `turnos.controlPoint` referencia a `puntos_control` sin FK a propósito: un punto nunca se borra y los turnos heredados con ids antiguos siguen siendo legibles.
 - **Búsqueda:** `instr(upper(col), upper(:q))` en lugar de `LIKE`, para que `%` y `_` del usuario no sean comodines.
 - **Carga semilla:** `DatabaseSeeder` corre una sola vez por arranque y carga el directorio demo solo en instalaciones nuevas.
 
@@ -124,14 +124,14 @@ sequenceDiagram
 | 18 → 19 | Se retira el simulador OS-10: elimina `examen_preguntas` y `examen_resultados`. No toca datos operativos. |
 | 19 → 20 | Crea `puntos_control` e inserta los puntos de fábrica (`INSERT OR IGNORE`, parametrizado). Las instalaciones nuevas los reciben en el `onCreate` de Room. |
 
-`Migration17To18Test` crea una base v17 real con `MigrationTestHelper`, la migra y valida el esquema contra `app/schemas/…/18.json`; `Migration18To19Test` hace lo mismo de v18 a v19.
+Cada migración tiene su test (`Migration17To18Test`, `Migration18To19Test`, `Migration19To20Test`): crea una base real de la versión de origen con `MigrationTestHelper`, la migra y valida el esquema contra el JSON exportado en `app/schemas/`.
 
 ---
 
 ## 4. Architecture Decision Records
 
 ### ADR-001 — Offline-first con Room como fuente única de verdad
-- **Contexto:** las garitas tienen conectividad nula o intermitente.
+- **Contexto:** los puntos de control pueden operar sin conectividad o con conexión intermitente.
 - **Decisión:** toda operación se persiste localmente; no hay backend.
 - **Consecuencias:** latencia mínima y operación garantizada. Requiere disciplina de migraciones (esquema exportado y testeado) y no hay consolidación entre dispositivos.
 
@@ -161,3 +161,8 @@ sequenceDiagram
 ### ADR-007 — Reportes PDF nativos, contenido en el dominio
 - **Decisión:** `BuildReportUseCase` produce un `ReportDocument` (columnas, filas y metadatos) y `PdfReportWriter` lo dibuja con `android.graphics.pdf` en `Dispatchers.IO`. Los PDF se guardan en `files/reports` y se comparten vía `FileProvider`.
 - **Consecuencias:** sin dependencias pesadas y el contenido del reporte queda testeado. El diseño visual del PDF es simple (tabla paginada).
+
+### ADR-008 — Puntos de control como datos, no como código
+- **Contexto:** los puntos de control eran un `enum`; agregar o renombrar uno exigía una nueva versión de la app.
+- **Decisión:** tabla `puntos_control` (id, nombre, tipo, orden, activo) con los puntos de fábrica precargados. El id es inmutable y nunca se reutiliza; el nombre es editable; desactivar reemplaza al borrado. Siempre debe quedar al menos un punto activo por tipo.
+- **Consecuencias:** el administrador gestiona los puntos sin publicar una versión nueva y el historial permanece intacto. El nombre del punto pasa a ser un dato editable en vez de un texto de `strings.xml`, y las pantallas lo leen del repositorio.

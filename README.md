@@ -8,7 +8,7 @@
 
 Aplicación Android nativa **offline-first** para el control de accesos vehiculares y bicicleteros en porterías: registro de ingresos y salidas por turno, directorio con autocompletado y reportes PDF.
 
-Está pensada para un guardia en garita, con el teléfono en una mano, poca luz y fila de autos: pocas pantallas, una acción principal por pantalla, autocompletado desde el directorio y cero dependencia de la red.
+Diseñada para uso operativo en terreno: flujos cortos, autocompletado desde el directorio, validación inmediata de los datos y funcionamiento completo sin conexión.
 
 ---
 
@@ -31,9 +31,10 @@ Está pensada para un guardia en garita, con el teléfono en una mano, poca luz 
 | Módulo | Qué permite |
 | :--- | :--- |
 | **Turnos** | El guardia inicia turno (nombre, día/noche, punto de control). Si la app se cierra, retoma el turno abierto. Al cerrarlo, el reporte PDF queda guardado para administración. |
-| **Portería vehicular** | Registro de ingreso con validación de patente y RUT (módulo 11), autocompletado por patente o RUT desde el directorio, búsqueda en el turno y salida con un toque y opción **Deshacer**. |
+| **Portería vehicular** | Registro de ingreso con validación de patente y RUT (formato y dígito verificador), autocompletado por patente o RUT desde el directorio, búsqueda en el turno y salida con un toque y opción **Deshacer**. Evita ingresos duplicados de un vehículo que ya está dentro. |
 | **Bicicletero** | Ingreso por RUT con autocompletado (último registro o directorio), búsqueda por RUT o nombre, salida con **Deshacer** y exportación PDF del turno. |
 | **Panel administrador** | Protegido por PIN. Muestra entradas, salidas y personas dentro del día por punto de control. Incluye resumen PDF, listado de turnos con filtro por fecha y exportación o borrado, y limpieza de datos operativos. |
+| **Puntos de control** | El administrador agrega porterías y bicicleteros, los renombra y los activa o desactiva. Los puntos desactivados conservan sus turnos y reportes. |
 | **Directorio** | Búsqueda, edición y eliminación de personas, importación masiva CSV (todo o nada, con errores por línea) y exportación PDF. |
 
 Todo funciona sin conexión. Los reportes se comparten con el selector nativo de Android (`FileProvider`).
@@ -55,7 +56,7 @@ flowchart LR
         R["Contratos<br/>Repositories, ReportExporter"]
     end
     subgraph Data["Datos (data/)"]
-        RR["Room*Repository"] --> DAO["DAOs"] --> DB[("SQLite<br/>Room v18")]
+        RR["Room*Repository"] --> DAO["DAOs"] --> DB[("SQLite<br/>Room v20")]
         PDF["PdfReportWriter"]
         SEC["AdminPinManager<br/>EncryptedSharedPreferences"]
         SES["SessionManager"]
@@ -111,17 +112,25 @@ El detalle de capas, decisiones (ADRs) y la estrategia de migración está en [d
 
 ## Modelo de datos
 
-Base Room versión 18. Los instantes se guardan como **epoch millis**; fecha y hora visibles se derivan al mostrar. `turnos` es la raíz de agregación: cada registro pertenece a un turno (FK con `ON DELETE CASCADE`).
+Base Room versión 20. Los instantes se guardan como **epoch millis**; fecha y hora visibles se derivan al mostrar. `turnos` es la raíz de agregación: cada registro pertenece a un turno (FK con `ON DELETE CASCADE`).
 
 ```mermaid
 erDiagram
     TURNOS ||--o{ REGISTROS_INGRESO : "agrupa"
     TURNOS ||--o{ REGISTROS_BICICLETA : "agrupa"
+    PUNTOS_CONTROL ||--o{ TURNOS : "id (referencia lógica)"
 
+    PUNTOS_CONTROL {
+        string id PK "inmutable, nunca se reutiliza"
+        string nombre "editable por el admin"
+        string tipo "PORTERIA | BICICLETERO"
+        int orden "orden y color"
+        boolean activo
+    }
     TURNOS {
         long id PK
         string guardia
-        string controlPoint "porteria_2..bicicletero_2 (Portería 1 = porteria_2)"
+        string controlPoint "id de PUNTOS_CONTROL"
         string tipo "DAY | NIGHT"
         string fecha "yyyy-MM-dd"
         long iniciadoAt
@@ -167,7 +176,7 @@ erDiagram
     }
 ```
 
-`personas` no tiene relación con los turnos: el directorio se vincula a los registros por valor (patente/RUT) solo para autocompletar. El esquema exportado vive en [`app/schemas/`](app/schemas/).
+`personas` no tiene relación con los turnos: el directorio se vincula a los registros por valor (patente/RUT) solo para autocompletar. `turnos.controlPoint` referencia a `puntos_control` sin FK, de modo que los turnos de puntos antiguos o desactivados se conservan. El esquema exportado vive en [`app/schemas/`](app/schemas/).
 
 ---
 
@@ -190,7 +199,7 @@ erDiagram
 - **Sin credenciales por defecto.** El PIN de administrador se define en el primer acceso y se guarda como hash `PBKDF2WithHmacSHA256` (100 000 iteraciones y salt de 16 bytes), cifrado en `EncryptedSharedPreferences`. La comparación es en tiempo constante. Tras 5 intentos fallidos el acceso se bloquea 30 s. La derivación corre fuera del hilo principal.
 - **Datos fuera de los respaldos.** `allowBackup="false"` más reglas explícitas que excluyen la base (incluidos `-wal`/`-shm`), las preferencias y la carpeta `reports/` tanto del respaldo en la nube como de la transferencia entre dispositivos (Android 12+).
 - **Mínimo privilegio al compartir.** `FileProvider` expone solo `files/reports/`.
-- **Entradas validadas y SQL parametrizado.** El RUT se valida con módulo 11 y la patente con su formato. Las búsquedas usan `instr()`, así que `%` y `_` no actúan como comodines.
+- **Entradas validadas y SQL parametrizado.** El RUT se valida por formato y dígito verificador (módulo 11), la patente por formato y los nombres por caracteres permitidos. Las búsquedas usan `instr()`, así que `%` y `_` no actúan como comodines.
 - **Sin logs de datos personales.** El código de producción no escribe en Logcat.
 - **Datos semilla 100 % sintéticos** (`res/raw/`).
 - **Release minificado** con R8 (`isMinifyEnabled` + `isShrinkResources`).
@@ -202,17 +211,17 @@ Política completa y reporte de vulnerabilidades en [SECURITY.md](SECURITY.md).
 ## Calidad y pruebas
 
 ```bash
-./gradlew testDebugUnitTest   # dominio, ViewModels, Room (Robolectric), migración y grafo DI
+./gradlew testDebugUnitTest   # dominio, ViewModels, Room (Robolectric), migraciones y grafo DI
 ./gradlew lintDebug           # abortOnError = true
 ./gradlew assembleDebug
 ```
 
 | Capa | Qué se prueba |
 | :--- | :--- |
-| Dominio | Validación de RUT y patente, parser CSV, casos de uso de turno, ingreso, salida, estadísticas y reportes (con fakes y reloj controlado). |
-| Datos | DAOs sobre SQLite real: agregados por punto, cascada de borrado, FK, búsqueda literal, salidas idempotentes, carga semilla idempotente. Migración 17→18 con datos heredados, incluido un turno nocturno que cruza medianoche. |
+| Dominio | Validación de cada campo de los formularios (RUT, patente, nombre, carrera, padrón) con casos válidos e inválidos, formateo del RUT tecla a tecla, parser CSV y casos de uso de turno, ingreso, salida, puntos de control, estadísticas y reportes (con fakes y reloj controlado). |
+| Datos | DAOs sobre SQLite real: agregados por punto, cascada de borrado, FK, búsqueda literal, salidas idempotentes y carga semilla. Cada migración (17→18, 18→19, 19→20) se valida contra el esquema exportado, incluidos datos heredados y un turno nocturno que cruza medianoche. |
 | Seguridad | Hash de PIN, bloqueo por intentos, cambio de PIN. |
-| Presentación | ViewModels: estados, errores de formulario, deshacer salida, cierre de turno con y sin fallo del reporte. |
+| Presentación | ViewModels: estados, errores de formulario, prevención de doble envío, deshacer salida, cierre de turno con y sin fallo del reporte. Formateo del RUT sobre un campo de texto real. |
 | DI | Todo ViewModel se resuelve desde el grafo Koin. |
 
 GitHub Actions ejecuta tests, lint y build en cada push o PR a `main`, valida el Gradle wrapper y publica los reportes como artefacto. Dependabot propone actualizaciones semanales.
@@ -244,8 +253,8 @@ app/src/main/java/com/dur1al/controlate/
     ├── di/                        # dataModule, domainModule, presentationModule
     ├── domain/
     │   ├── model/                 # ControlPoint, PersonaType, ShiftType, entradas, errores de validación
-    │   ├── validation/            # Rut, Patente
-    │   ├── usecase/               # Turnos, ingresos, salidas, estadísticas, reportes
+    │   ├── validation/            # Rut, RutInputFormatter, Patente
+    │   ├── usecase/               # Turnos, ingresos, salidas, puntos de control, estadísticas, reportes
     │   ├── repository/            # Contratos de persistencia
     │   ├── report/                # ReportDocument, ReportExporter
     │   ├── importer/              # PersonaCsvParser

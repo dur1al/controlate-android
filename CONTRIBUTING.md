@@ -7,7 +7,7 @@
 3. Toda regla nueva de dominio o seguridad llega con su test en `app/src/test/` (JVM o Robolectric). Los ViewModels se prueban con los fakes de `porteria/testing/`.
 4. Si modificas una entidad Room: incrementa la versión de `AppDatabase`, agrega una migración explícita y su test con `MigrationTestHelper`, y versiona el nuevo JSON de `app/schemas/`.
 5. Externaliza todos los textos visibles en `app/src/main/res/values/strings.xml`.
-6. **Privacidad obligatoria:** Nunca subas datos reales (nombres, patentes, RUTs, recintos) ni credenciales/PINs en código, `res/raw/` o tests. Usa únicamente datos sintéticos.
+6. **Privacidad:** el repositorio solo contiene datos ficticios. No incluyas información personal ni credenciales en el código, los recursos o los tests; genera los RUT de prueba con `Rut.computeCheckDigit`.
 
 ## Verificación Local
 
