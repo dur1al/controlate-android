@@ -1,62 +1,92 @@
 package com.dur1al.controlate.porteria.ui.admin
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.dur1al.controlate.porteria.data.repository.RegistroRepository
-import com.dur1al.controlate.porteria.domain.model.Result
-import com.dur1al.controlate.porteria.domain.util.DateFormatter
-import com.dur1al.controlate.porteria.utils.ExportResult
-import com.dur1al.controlate.porteria.utils.ReportManager
+import com.dur1al.controlate.R
+import com.dur1al.controlate.porteria.domain.model.ControlPoint
+import com.dur1al.controlate.porteria.domain.model.PointStat
+import com.dur1al.controlate.porteria.domain.report.ReportExporter
+import com.dur1al.controlate.porteria.domain.usecase.BuildReportUseCase
+import com.dur1al.controlate.porteria.domain.usecase.ClearOperationalDataUseCase
+import com.dur1al.controlate.porteria.domain.usecase.GetDailyStatsUseCase
+import com.dur1al.controlate.porteria.ui.common.EventChannel
+import com.dur1al.controlate.porteria.ui.common.UiMessage
+import com.dur1al.controlate.porteria.ui.common.runCatchingCancellable
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.File
 
+/** Panel administrador: estadísticas del día, resumen PDF y limpieza de datos operativos. */
 class AdminViewModel(
-    private val registroRepository: RegistroRepository,
-    private val reportManager: ReportManager
+    private val getDailyStats: GetDailyStatsUseCase,
+    private val clearOperationalData: ClearOperationalDataUseCase,
+    private val buildReport: BuildReportUseCase,
+    private val exporter: ReportExporter
 ) : ViewModel() {
 
-    private val _stats = MutableLiveData<AdminStats>()
-    val stats: LiveData<AdminStats> = _stats
+    data class Totals(val entradas: Int, val salidas: Int, val dentro: Int)
 
-    private val _recentLogs = MutableLiveData<List<com.dur1al.controlate.porteria.data.local.entities.RegistroIngreso>>()
-    val recentLogs: LiveData<List<com.dur1al.controlate.porteria.data.local.entities.RegistroIngreso>> = _recentLogs
+    data class UiState(
+        val loading: Boolean = true,
+        val points: List<PointStat> = emptyList(),
+        /** `null` = vista general (todos los puntos). */
+        val scope: ControlPoint? = null,
+        val totals: Totals = Totals(0, 0, 0),
+        val busy: Boolean = false
+    )
 
-    private val _exportResult = MutableLiveData<ExportResult?>()
-    val exportResult: LiveData<ExportResult?> = _exportResult
+    sealed interface Event {
+        data class Share(val file: File) : Event
+        data object Cleared : Event
+        data class Message(val message: UiMessage) : Event
+    }
 
-    fun loadStats() {
+    private val _state = MutableStateFlow(UiState())
+    val state: StateFlow<UiState> = _state.asStateFlow()
+
+    private val eventChannel = EventChannel<Event>()
+    val events: Flow<Event> = eventChannel.events
+
+    init {
+        refresh()
+    }
+
+    fun refresh() {
         viewModelScope.launch {
-            val today = DateFormatter.todayDbFormat()
-            val total = registroRepository.getCountRegistrosByFecha(today)
-            val salidas = registroRepository.getCountSalidasByFecha(today)
-
-            _stats.postValue(AdminStats(total, salidas, total - salidas))
-
-            val logs = registroRepository.getRecordsByDate(today)
-            _recentLogs.postValue(logs.sortedByDescending { it.id })
+            val points = getDailyStats()
+            _state.update { it.copy(loading = false, points = points, totals = totalsFor(points, it.scope)) }
         }
     }
 
-    fun exportReport() {
+    fun selectScope(point: ControlPoint?) {
+        _state.update { it.copy(scope = point, totals = totalsFor(it.points, point)) }
+    }
+
+    fun exportSummary() {
+        if (_state.value.busy) return
         viewModelScope.launch {
-            _exportResult.value = null // reset
-            try {
-                val registros = registroRepository.getAllRecords()
-                val result = reportManager.generateAndShareExcel(registros, "Admin", "General", "Hoy", "Admin")
-                _exportResult.postValue(result)
-            } catch (e: Exception) {
-                _exportResult.postValue(ExportResult.Error(e.message ?: "Unknown error"))
-            }
+            _state.update { it.copy(busy = true) }
+            runCatchingCancellable { exporter.export(buildReport.dailySummary(getDailyStats())) }
+                .onSuccess { eventChannel.send(Event.Share(it)) }
+                .onFailure { eventChannel.send(Event.Message(UiMessage(R.string.error_generic))) }
+            _state.update { it.copy(busy = false) }
         }
     }
 
-    fun clearExportResult() {
-        _exportResult.value = null
+    fun clearOperationalData() {
+        viewModelScope.launch {
+            clearOperationalData.invoke()
+            eventChannel.send(Event.Cleared)
+            refresh()
+        }
     }
 
-    data class AdminStats(val ingresos: Int, val salidas: Int, val enRecinto: Int)
+    private fun totalsFor(points: List<PointStat>, scope: ControlPoint?): Totals {
+        val selected = if (scope == null) points else points.filter { it.controlPoint == scope }
+        return Totals(selected.sumOf { it.entradas }, selected.sumOf { it.salidas }, selected.sumOf { it.dentro })
+    }
 }
-
-

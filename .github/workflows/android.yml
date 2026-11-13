@@ -2,37 +2,54 @@ name: Android CI
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ "main", "master" ]
+    branches: [ "main" ]
 
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   verify:
-    name: Build, Test & Lint
+    name: Test, Lint & Build
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v4
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: gradle
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+      - name: Set up Gradle (with cache)
+        uses: gradle/actions/setup-gradle@v4
 
-      - name: Run Unit Tests
+      - name: Unit tests (JVM + Robolectric)
         run: ./gradlew testDebugUnitTest --console=plain
 
-      - name: Run Android Lint
+      - name: Android Lint
         run: ./gradlew lintDebug --console=plain
 
-      - name: Build Debug APK
+      - name: Build debug APK
         run: ./gradlew assembleDebug --console=plain
+
+      - name: Upload test and lint reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports
+          path: |
+            app/build/reports/tests/
+            app/build/reports/lint-results-debug.html
+          retention-days: 14

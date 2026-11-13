@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background"
     android:clipToPadding="false"
     android:fillViewport="true">
 
@@ -129,8 +129,10 @@
             android:layout_marginTop="16dp"
             android:hint="@string/login_control_point_hint">
 
+            <!-- El TextInputLayout padre expone el hint como etiqueta accesible. -->
             <AutoCompleteTextView
                 android:id="@+id/actvControlPoint"
+                tools:ignore="LabelFor"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="none"

@@ -14,13 +14,15 @@ captures/
 *.aab
 *.ap_
 
+# Artefactos de release generados por Android Studio (APK/AAB firmados, perfiles, metadata)
+app/release/
+
 # Local configuration & SDK
 local.properties
 
 # Secrets, signing & environment
 .env
 .env.*
-!.env.example
 *.jks
 *.keystore
 *.p12

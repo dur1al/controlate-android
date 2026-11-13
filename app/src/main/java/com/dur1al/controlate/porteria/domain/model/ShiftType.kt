@@ -1,18 +1,20 @@
 package com.dur1al.controlate.porteria.domain.model
 
-import com.dur1al.controlate.R
-
 /**
- * Tipos de turno operativo.
- * Los valores de [displayValue] se usan para persistencia y reportes.
+ * Tipo de turno operativo. Se persiste el [name]; la etiqueta visible vive en `strings.xml`.
  */
-enum class ShiftType(val displayValue: String, val labelRes: Int) {
-    DAY("DIA (08:00 - 20:00)", R.string.shift_type_day),
-    NIGHT("NOCHE (20:00 - 08:00)", R.string.shift_type_night);
+enum class ShiftType {
+    DAY,
+    NIGHT;
 
     companion object {
-        fun fromValue(value: String?): ShiftType {
-            return entries.find { it.displayValue == value } ?: DAY
+        /** Acepta el código o las etiquetas heredadas (`"NOCHE (20:00 - 08:00)"`). Desconocido -> [DAY]. */
+        fun fromCode(code: String?): ShiftType {
+            val value = code?.trim()?.uppercase().orEmpty()
+            return when {
+                value == NIGHT.name || value.startsWith("NOCHE") -> NIGHT
+                else -> DAY
+            }
         }
     }
 }

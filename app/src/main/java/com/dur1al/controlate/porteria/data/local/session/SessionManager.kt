@@ -2,63 +2,71 @@ package com.dur1al.controlate.porteria.data.local.session
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.dur1al.controlate.porteria.data.local.database.LegacyActiveShift
+import com.dur1al.controlate.porteria.domain.repository.SessionStore
 
-class SessionManager(context: Context) {
+/**
+ * Guarda solo el puntero al turno abierto. Los datos del turno (guardia, punto, tipo)
+ * viven en la tabla `turnos`; así no hay dos fuentes de verdad.
+ */
+class SessionManager(context: Context) : SessionStore {
+
     private val prefs: SharedPreferences =
-        context.getSharedPreferences("porteria_prefs", Context.MODE_PRIVATE)
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
-    companion object {
-        private const val KEY_GUARDIA = "guardia_name"
-        private const val KEY_PORTERIA_ID = "porteria_id"
-        private const val KEY_PORTERIA_NAME = "porteria_name"
-        private const val KEY_FECHA_TURNO = "fecha_turno"
-        private const val KEY_TURNO_TIPO = "turno_tipo"
-        private const val KEY_SHIFT_ID = "shift_id"
-        private const val KEY_IS_SHIFT_ACTIVE = "is_shift_active"
+    override fun activeShiftId(): Long? =
+        prefs.getLong(KEY_ACTIVE_SHIFT_ID, NO_SHIFT).takeIf { it != NO_SHIFT }
+
+    override fun setActiveShift(id: Long) {
+        prefs.edit().putLong(KEY_ACTIVE_SHIFT_ID, id).apply()
+    }
+
+    override fun clear() {
+        prefs.edit().remove(KEY_ACTIVE_SHIFT_ID).apply()
     }
 
     /**
-     * Inicia un turno guardando el nombre del guardia, el ID técnico del punto de control,
-     * el nombre visible del punto, la fecha y el tipo de turno.
+     * Lee (una vez) el turno abierto que guardaban versiones anteriores en estas mismas
+     * preferencias, lo apunta como turno activo y borra las claves heredadas.
+     * Debe llamarse antes de abrir la base para que [com.dur1al.controlate.porteria.data.local.database.Migration17To18]
+     * pueda materializarlo en la tabla `turnos`.
      */
-    fun startShift(
-        guardia: String,
-        porteriaName: String,
-        porteriaId: String,
-        fecha: String,
-        turnoTipo: String
-    ) {
-        val shiftId = System.currentTimeMillis()
-        prefs.edit().apply {
-            putString(KEY_GUARDIA, guardia)
-            putString(KEY_PORTERIA_ID, porteriaId)
-            putString(KEY_PORTERIA_NAME, porteriaName)
-            putString(KEY_FECHA_TURNO, fecha)
-            putString(KEY_TURNO_TIPO, turnoTipo)
-            putLong(KEY_SHIFT_ID, shiftId)
-            putBoolean(KEY_IS_SHIFT_ACTIVE, true)
-            apply()
+    fun consumeLegacyActiveShift(): LegacyActiveShift? {
+        if (!prefs.contains(LEGACY_IS_ACTIVE)) return null
+        val active = prefs.getBoolean(LEGACY_IS_ACTIVE, false)
+        val id = prefs.getLong(LEGACY_SHIFT_ID, 0L)
+        val legacy = if (active && id > 0) {
+            LegacyActiveShift(
+                id = id,
+                guardia = prefs.getString(LEGACY_GUARDIA, "").orEmpty(),
+                controlPoint = prefs.getString(LEGACY_POINT_ID, "").orEmpty(),
+                turnoTipo = prefs.getString(LEGACY_TURNO_TIPO, "").orEmpty(),
+                fecha = prefs.getString(LEGACY_FECHA, "").orEmpty()
+            )
+        } else {
+            null
         }
+        prefs.edit().apply {
+            LEGACY_KEYS.forEach(::remove)
+            if (legacy != null) putLong(KEY_ACTIVE_SHIFT_ID, legacy.id)
+        }.apply()
+        return legacy
     }
 
-    fun endShift() {
-        prefs.edit().putBoolean(KEY_IS_SHIFT_ACTIVE, false).apply()
+    private companion object {
+        const val PREFS_NAME = "porteria_prefs"
+        const val KEY_ACTIVE_SHIFT_ID = "active_shift_id"
+        const val NO_SHIFT = -1L
+
+        const val LEGACY_GUARDIA = "guardia_name"
+        const val LEGACY_POINT_ID = "porteria_id"
+        const val LEGACY_FECHA = "fecha_turno"
+        const val LEGACY_TURNO_TIPO = "turno_tipo"
+        const val LEGACY_SHIFT_ID = "shift_id"
+        const val LEGACY_IS_ACTIVE = "is_shift_active"
+        val LEGACY_KEYS = listOf(
+            LEGACY_GUARDIA, LEGACY_POINT_ID, "porteria_name", LEGACY_FECHA,
+            LEGACY_TURNO_TIPO, LEGACY_SHIFT_ID, LEGACY_IS_ACTIVE
+        )
     }
-
-    fun isShiftActive(): Boolean = prefs.getBoolean(KEY_IS_SHIFT_ACTIVE, false)
-    fun getGuardiaName(): String = prefs.getString(KEY_GUARDIA, "") ?: ""
-
-    /** Devuelve el ID técnico del punto de control (ej: "porteria_2", "bicicletero_1"). */
-    fun getPorteriaId(): String = prefs.getString(KEY_PORTERIA_ID, "porteria_2") ?: "porteria_2"
-
-    /** Devuelve el nombre visible del punto de control (ej: "Portería 2", "Bicicletero 1"). */
-    fun getPorteriaName(): String {
-        // Fallback a KEY_PORTERIA_ID para compatibilidad con datos existentes
-        return prefs.getString(KEY_PORTERIA_NAME, null)
-            ?: prefs.getString(KEY_PORTERIA_ID, "") ?: ""
-    }
-
-    fun getFechaTurno(): String = prefs.getString(KEY_FECHA_TURNO, "") ?: ""
-    fun getTurnoTipo(): String = prefs.getString(KEY_TURNO_TIPO, "No definido") ?: "No definido"
-    fun getShiftId(): Long = prefs.getLong(KEY_SHIFT_ID, 0L)
 }

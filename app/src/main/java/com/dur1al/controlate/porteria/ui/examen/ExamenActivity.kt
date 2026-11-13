@@ -1,180 +1,120 @@
 package com.dur1al.controlate.porteria.ui.examen
 
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.OnBackPressedCallback
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import com.dur1al.controlate.R
 import com.dur1al.controlate.databinding.ActivityExamenBinding
-import com.dur1al.controlate.porteria.data.local.session.SessionManager
+import com.dur1al.controlate.porteria.ui.common.collectWhenStarted
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import org.koin.androidx.viewmodel.ext.android.viewModel
-import java.util.Locale
+import org.koin.core.parameter.parametersOf
 
+/** Simulador del examen OS-10 (60 preguntas, 60 minutos, aprobación con 70 %). */
 class ExamenActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityExamenBinding
-    private val viewModel: ExamenViewModel by viewModel()
-    private lateinit var sessionManager: SessionManager
+    private val viewModel: ExamenViewModel by viewModel {
+        parametersOf(intent.getStringExtra(EXTRA_GUARD_NAME).orEmpty())
+    }
 
-    private var isUpdatingRadioGroup = false
+    /** Evita que actualizar los RadioButton desde el estado dispare una nueva respuesta. */
+    private var rendering = false
+    private var resultShown = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityExamenBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        resultShown = supportFragmentManager.findFragmentByTag(ExamenResultadoDialogFragment.TAG) != null
 
-        sessionManager = SessionManager(this)
-        setupToolbar()
-        setupListeners()
-        setupObservers()
-        setupOnBackPressed()
-
-        val guardiaNombre = sessionManager.getGuardiaName().ifBlank { "Guardia OS-10" }
-        viewModel.iniciarExamen(guardiaNombre)
-    }
-
-    private fun setupToolbar() {
-        binding.toolbarExamen.setNavigationOnClickListener {
-            confirmarSalirExamen()
-        }
-    }
-
-    private fun setupOnBackPressed() {
+        binding.toolbarExamen.setNavigationOnClickListener { confirmExit() }
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                confirmarSalirExamen()
-            }
+            override fun handleOnBackPressed() = confirmExit()
         })
-    }
-
-    private fun setupListeners() {
         binding.rgOpciones.setOnCheckedChangeListener { _, checkedId ->
-            if (isUpdatingRadioGroup) return@setOnCheckedChangeListener
-            val seleccionIndex = when (checkedId) {
-                R.id.rbOpcionA -> 0
-                R.id.rbOpcionB -> 1
-                R.id.rbOpcionC -> 2
-                R.id.rbOpcionD -> 3
-                else -> -1
-            }
-            if (seleccionIndex != -1) {
-                viewModel.seleccionarRespuesta(seleccionIndex)
-            }
+            if (rendering) return@setOnCheckedChangeListener
+            optionIds.indexOf(checkedId).takeIf { it >= 0 }?.let(viewModel::answer)
         }
+        binding.btnAnterior.setOnClickListener { viewModel.previous() }
+        binding.btnSiguiente.setOnClickListener { viewModel.next() }
+        binding.btnFinalizar.setOnClickListener { confirmFinish() }
 
-        binding.btnAnterior.setOnClickListener {
-            viewModel.anteriorPregunta()
+        collectWhenStarted(viewModel.state, ::render)
+    }
+
+    private val optionIds by lazy {
+        listOf(binding.rbOpcionA.id, binding.rbOpcionB.id, binding.rbOpcionC.id, binding.rbOpcionD.id)
+    }
+
+    private fun render(state: ExamenViewModel.UiState) = with(binding) {
+        val minutes = state.remainingSeconds / 60
+        val seconds = state.remainingSeconds % 60
+        tvTimer.text = getString(R.string.examen_timer_format, minutes, seconds)
+
+        val pregunta = state.current
+        if (!state.loading && pregunta == null) {
+            Snackbar.make(root, R.string.examen_empty_bank, Snackbar.LENGTH_LONG).show()
         }
-
-        binding.btnSiguiente.setOnClickListener {
-            viewModel.siguientePregunta()
+        if (pregunta != null) {
+            progressExamen.max = state.preguntas.size
+            progressExamen.progress = state.index + 1
+            tvPreguntaContador.text = getString(R.string.examen_pregunta_format, state.index + 1, state.preguntas.size)
+            tvCategoria.text = pregunta.categoria
+            tvPreguntaTexto.text = pregunta.pregunta
+            rbOpcionA.text = getString(R.string.examen_option_format, "A", pregunta.opcionA)
+            rbOpcionB.text = getString(R.string.examen_option_format, "B", pregunta.opcionB)
+            rbOpcionC.text = getString(R.string.examen_option_format, "C", pregunta.opcionC)
+            rbOpcionD.text = getString(R.string.examen_option_format, "D", pregunta.opcionD)
+            rendering = true
+            val selected = state.selectedOption
+            if (selected == null) rgOpciones.clearCheck() else rgOpciones.check(optionIds[selected])
+            rendering = false
         }
+        btnAnterior.isEnabled = !state.isFirst
+        btnSiguiente.isVisible = !state.isLast
+        btnFinalizar.isVisible = state.isLast || state.answeredCount == state.preguntas.size
 
-        binding.btnFinalizar.setOnClickListener {
-            confirmarFinalizarExamen()
+        val resultado = state.resultado
+        if (resultado != null && !resultShown) {
+            resultShown = true
+            ExamenResultadoDialogFragment.newInstance(resultado)
+                .show(supportFragmentManager, ExamenResultadoDialogFragment.TAG)
         }
     }
 
-    private fun setupObservers() {
-        viewModel.preguntas.observe(this) { preguntas ->
-            if (preguntas.isNotEmpty()) {
-                val total = preguntas.size
-                binding.progressExamen.max = total
-                renderPreguntaActual()
-            }
-        }
-
-        viewModel.indiceActual.observe(this) { _ ->
-            renderPreguntaActual()
-        }
-
-        viewModel.respuestas.observe(this) { _ ->
-            updateSeleccionRadioGroup()
-        }
-
-        viewModel.tiempoFormateado.observe(this) { tiempoStr ->
-            binding.tvTimer.text = tiempoStr
-        }
-
-        viewModel.resultado.observe(this) { resultado ->
-            if (resultado != null) {
-                val dialog = ExamenResultadoDialogFragment.newInstance(resultado)
-                dialog.setOnDismissListener {
-                    finish()
-                }
-                dialog.show(supportFragmentManager, ExamenResultadoDialogFragment.TAG)
-            }
-        }
-    }
-
-    private fun renderPreguntaActual() {
-        val lista = viewModel.preguntas.value ?: return
-        if (lista.isEmpty()) return
-
-        val index = viewModel.indiceActual.value ?: 0
-        val total = lista.size
-        val pregunta = lista.getOrNull(index) ?: return
-
-        binding.progressExamen.progress = index + 1
-        binding.tvPreguntaContador.text = String.format(Locale.getDefault(), "Pregunta %d de %d", index + 1, total)
-        binding.tvCategoria.text = pregunta.categoria
-        binding.tvPreguntaTexto.text = pregunta.pregunta
-
-        binding.rbOpcionA.text = String.format(Locale.getDefault(), "A) %s", pregunta.opcionA)
-        binding.rbOpcionB.text = String.format(Locale.getDefault(), "B) %s", pregunta.opcionB)
-        binding.rbOpcionC.text = String.format(Locale.getDefault(), "C) %s", pregunta.opcionC)
-        binding.rbOpcionD.text = String.format(Locale.getDefault(), "D) %s", pregunta.opcionD)
-
-        binding.btnAnterior.isEnabled = index > 0
-        binding.btnSiguiente.isVisible = index < total - 1
-        binding.btnFinalizar.isVisible = index == total - 1 || viewModel.respuestas.value?.size == total
-
-        updateSeleccionRadioGroup()
-    }
-
-    private fun updateSeleccionRadioGroup() {
-        val index = viewModel.indiceActual.value ?: 0
-        val seleccion = viewModel.respuestas.value?.get(index)
-
-        isUpdatingRadioGroup = true
-        binding.rgOpciones.clearCheck()
-
-        when (seleccion) {
-            0 -> binding.rbOpcionA.isChecked = true
-            1 -> binding.rbOpcionB.isChecked = true
-            2 -> binding.rbOpcionC.isChecked = true
-            3 -> binding.rbOpcionD.isChecked = true
-        }
-        isUpdatingRadioGroup = false
-    }
-
-    private fun confirmarSalirExamen() {
-        AlertDialog.Builder(this)
-            .setTitle("Salir del Examen")
-            .setMessage("¿Deseas salir del examen? Se perderá el progreso del intento actual.")
-            .setPositiveButton("Sí, salir") { _, _ -> finish() }
-            .setNegativeButton("Cancelar", null)
+    private fun confirmExit() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.examen_exit_title)
+            .setMessage(R.string.examen_exit_message)
+            .setPositiveButton(R.string.examen_exit_confirm) { _, _ -> finish() }
+            .setNegativeButton(R.string.dialog_cancel, null)
             .show()
     }
 
-    private fun confirmarFinalizarExamen() {
-        val respondidas = viewModel.respuestas.value?.size ?: 0
-        val total = viewModel.preguntas.value?.size ?: 60
-
-        val mensaje = if (respondidas < total) {
-            String.format(Locale.getDefault(), "Has respondido %d de %d preguntas. ¿Deseas entregar el examen ahora?", respondidas, total)
+    private fun confirmFinish() {
+        val state = viewModel.state.value
+        val message = if (state.answeredCount < state.preguntas.size) {
+            getString(R.string.examen_finish_partial, state.answeredCount, state.preguntas.size)
         } else {
-            "Has respondido todas las preguntas (60/60). ¿Deseas entregar el examen?"
+            getString(R.string.examen_finish_complete)
         }
-
-        AlertDialog.Builder(this)
-            .setTitle("Finalizar Examen OS-10")
-            .setMessage(mensaje)
-            .setPositiveButton("Entregar Examen") { _, _ ->
-                viewModel.finalizarExamen()
-            }
-            .setNegativeButton("Continuar respondiendo", null)
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.examen_finish_title)
+            .setMessage(message)
+            .setPositiveButton(R.string.examen_finish_confirm) { _, _ -> viewModel.finish() }
+            .setNegativeButton(R.string.examen_keep_answering, null)
             .show()
+    }
+
+    companion object {
+        private const val EXTRA_GUARD_NAME = "guard_name"
+
+        fun intent(context: Context, guardName: String) =
+            Intent(context, ExamenActivity::class.java).putExtra(EXTRA_GUARD_NAME, guardName)
     }
 }

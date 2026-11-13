@@ -6,35 +6,20 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.dur1al.controlate.porteria.data.local.entities.ExamenPregunta
 import com.dur1al.controlate.porteria.data.local.entities.ExamenResultado
-import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ExamenDao {
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertPregunta(pregunta: ExamenPregunta)
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    /** Idempotente gracias al índice único sobre `pregunta`. */
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertPreguntas(preguntas: List<ExamenPregunta>)
 
     @Query("SELECT * FROM examen_preguntas ORDER BY RANDOM() LIMIT :limit")
-    suspend fun getRandomPreguntas(limit: Int = 60): List<ExamenPregunta>
-
-    @Query("SELECT * FROM examen_preguntas ORDER BY id ASC")
-    suspend fun getAllPreguntas(): List<ExamenPregunta>
+    suspend fun getRandomPreguntas(limit: Int): List<ExamenPregunta>
 
     @Query("SELECT COUNT(*) FROM examen_preguntas")
-    suspend fun getPreguntasCount(): Int
+    suspend fun countPreguntas(): Int
 
-    @Query("DELETE FROM examen_preguntas")
-    suspend fun deleteAllPreguntas()
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert
     suspend fun insertResultado(resultado: ExamenResultado): Long
-
-    @Query("SELECT * FROM examen_resultados ORDER BY id DESC")
-    fun getAllResultados(): Flow<List<ExamenResultado>>
-
-    @Query("SELECT * FROM examen_resultados ORDER BY id DESC LIMIT 10")
-    suspend fun getUltimosResultados(): List<ExamenResultado>
 }

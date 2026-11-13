@@ -12,12 +12,12 @@ android {
         applicationId = "com.dur1al.controlate"
         minSdk = 26
         targetSdk = 36
-        versionCode = 2
-        versionName = "1.1"
+        versionCode = 3
+        versionName = "1.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
     }
+
 
     buildTypes {
         release {
@@ -38,10 +38,31 @@ android {
         jvmTarget = "17"
     }
 
+    lint {
+        abortOnError = true
+        checkDependencies = true
+        // Actualizar versiones de dependencias es una tarea aparte (ver README > Roadmap).
+        disable += setOf("GradleDependency", "AndroidGradlePluginVersion")
+    }
+
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
+
+    sourceSets {
+        // Los tests unitarios (Robolectric) leen los esquemas Room desde los assets del variant debug.
+        // No afecta a release.
+        getByName("debug").assets.srcDir("$projectDir/schemas")
+    }
+
     buildFeatures {
         viewBinding = true
         buildConfig = true
     }
+}
+
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
 }
 
 dependencies {
@@ -62,18 +83,19 @@ dependencies {
 
     // Lifecycle
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
-    implementation(libs.androidx.lifecycle.livedata.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
 
-    // JSON & Workers (Optimization)
+    // JSON (carga de datos semilla)
     implementation(libs.google.code.gson)
-    implementation(libs.androidx.work.runtime.ktx)
 
     // Koin & Security
     implementation(libs.koin.android)
     implementation(libs.androidx.security.crypto)
 
     testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.androidx.junit)
+    testImplementation(libs.androidx.room.testing)
 }

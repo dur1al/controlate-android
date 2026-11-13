@@ -1,68 +1,48 @@
 package com.dur1al.controlate.porteria.data.local.dao
 
-import androidx.room.*
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.Query
 import com.dur1al.controlate.porteria.data.local.entities.RegistroIngreso
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface RegistroDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(registro: RegistroIngreso)
 
-    @Update
-    suspend fun update(registro: RegistroIngreso)
+    @Insert
+    suspend fun insert(registro: RegistroIngreso): Long
 
-    @Delete
-    suspend fun delete(registro: RegistroIngreso)
+    @Query("SELECT * FROM registros_ingreso WHERE id = :id")
+    suspend fun getById(id: Long): RegistroIngreso?
 
-    @Query("SELECT * FROM registros_ingreso WHERE shiftId = :shiftId ORDER BY id DESC")
-    fun getRegistrosByShift(shiftId: Long): Flow<List<RegistroIngreso>>
+    /**
+     * Registros del turno; [query] filtra por patente o nombre. Se usa `instr` en lugar de
+     * `LIKE` para que `%` o `_` escritos por el usuario no actúen como comodines.
+     */
+    @Query(
+        """
+        SELECT * FROM registros_ingreso
+        WHERE shiftId = :shiftId
+          AND (:query = '' OR instr(upper(patente), upper(:query)) > 0 OR instr(upper(nombreApellido), upper(:query)) > 0)
+        ORDER BY entradaAt DESC, id DESC
+        """
+    )
+    fun observeByShift(shiftId: Long, query: String): Flow<List<RegistroIngreso>>
 
-    @Query("SELECT * FROM registros_ingreso WHERE (patente LIKE '%' || :query || '%' OR nombreApellido LIKE '%' || :query || '%') AND shiftId = :shiftId ORDER BY id DESC")
-    fun searchRegistrosByShift(query: String, shiftId: Long): Flow<List<RegistroIngreso>>
+    @Query("SELECT * FROM registros_ingreso WHERE shiftId = :shiftId ORDER BY entradaAt ASC, id ASC")
+    suspend fun getByShift(shiftId: Long): List<RegistroIngreso>
 
-    @Query("SELECT * FROM registros_ingreso WHERE fechaEntrada = :fecha ORDER BY id DESC")
-    fun getRegistrosByFecha(fecha: String): Flow<List<RegistroIngreso>>
+    @Query("SELECT * FROM registros_ingreso WHERE entradaAt BETWEEN :from AND :to ORDER BY entradaAt ASC, id ASC")
+    suspend fun getBetween(from: Long, to: Long): List<RegistroIngreso>
 
-    @Query("SELECT * FROM registros_ingreso ORDER BY id ASC")
-    suspend fun getAllRecordsList(): List<RegistroIngreso>
+    /** Marca la salida solo si no existía; devuelve filas afectadas (0 = ya tenía salida). */
+    @Query("UPDATE registros_ingreso SET salidaAt = :at WHERE id = :id AND salidaAt IS NULL")
+    suspend fun markExit(id: Long, at: Long): Int
 
-    @Query("SELECT * FROM registros_ingreso WHERE fechaEntrada = :date ORDER BY id ASC")
-    suspend fun getRecordsByDateList(date: String): List<RegistroIngreso>
-    
-    @Query("SELECT * FROM registros_ingreso WHERE shiftId = :shiftId ORDER BY id ASC")
-    suspend fun getRecordsByShiftList(shiftId: Long): List<RegistroIngreso>
+    /** Revierte una salida concreta (deshacer) sin pisar otra salida distinta. */
+    @Query("UPDATE registros_ingreso SET salidaAt = NULL WHERE id = :id AND salidaAt = :at")
+    suspend fun undoExit(id: Long, at: Long): Int
 
     @Query("DELETE FROM registros_ingreso")
     suspend fun deleteAll()
-
-    @Query("DELETE FROM registros_ingreso WHERE shiftId = :shiftId")
-    suspend fun deleteByShift(shiftId: Long)
-    
-    @Query("SELECT COUNT(*) FROM registros_ingreso WHERE fechaEntrada = :fecha")
-    suspend fun countRegistrosByFecha(fecha: String): Int
-
-    @Query("SELECT COUNT(*) FROM registros_ingreso WHERE fechaEntrada = :fecha AND horaSalida IS NOT NULL")
-    suspend fun countSalidasByFecha(fecha: String): Int
-
-    @Query("SELECT COUNT(*) FROM registros_ingreso WHERE fechaEntrada = :fecha AND porteria = :porteria")
-    suspend fun countRegistrosByFechaAndPoint(fecha: String, porteria: String): Int
-
-    @Query("SELECT COUNT(*) FROM registros_ingreso WHERE fechaEntrada = :fecha AND porteria = :porteria AND horaSalida IS NOT NULL")
-    suspend fun countSalidasByFechaAndPoint(fecha: String, porteria: String): Int
-
-    @Query("SELECT shiftId, guardiaTurno, fechaTurno, porteria, turnoTipo, MIN(horaEntrada) as horaInicio, MAX(horaSalida) as horaFin, COUNT(*) as totalRegistros, COALESCE(SUM(CASE WHEN horaSalida IS NOT NULL THEN 1 ELSE 0 END), 0) as totalSalidas FROM registros_ingreso GROUP BY shiftId ORDER BY shiftId DESC")
-    fun getAllShifts(): Flow<List<ShiftSummary>>
-
-    data class ShiftSummary(
-        val shiftId: Long,
-        val guardiaTurno: String,
-        val fechaTurno: String,
-        val porteria: String,
-        val turnoTipo: String,
-        val horaInicio: String,
-        val horaFin: String?,
-        val totalRegistros: Int,
-        val totalSalidas: Int
-    )
 }

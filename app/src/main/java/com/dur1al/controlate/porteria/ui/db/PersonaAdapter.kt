@@ -5,48 +5,43 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.dur1al.controlate.R
 import com.dur1al.controlate.databinding.ItemPersonaBinding
 import com.dur1al.controlate.porteria.data.local.entities.Persona
+import com.dur1al.controlate.porteria.domain.model.PersonaType
+import com.dur1al.controlate.porteria.ui.common.labelRes
 
 class PersonaAdapter(
-    private val onEdit: ((Persona) -> Unit)? = null,
-    private val onDelete: ((Persona) -> Unit)? = null,
-    private val isReadOnly: Boolean = false
-) : ListAdapter<Persona, PersonaAdapter.ViewHolder>(DiffCallback) {
+    private val onEdit: (Persona) -> Unit,
+    private val onDelete: (Persona) -> Unit
+) : ListAdapter<Persona, PersonaAdapter.ViewHolder>(Diff) {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val binding = ItemPersonaBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return ViewHolder(binding)
-    }
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
+        ViewHolder(ItemPersonaBinding.inflate(LayoutInflater.from(parent.context), parent, false))
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bind(getItem(position))
-    }
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) = holder.bind(getItem(position))
 
     inner class ViewHolder(private val binding: ItemPersonaBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(persona: Persona) {
-            binding.apply {
-                tvNombre.text = persona.nombreApellido
-                tvPatente.text = persona.patente
-                tvDepto.text = "Depto: ${persona.departamento}"
-                tvDetalle.text = "${persona.descripcionAuto} | ${persona.tipoPersona ?: "Visita"}"
-                
-                if (!isReadOnly) {
-                    root.setOnClickListener { onEdit?.invoke(persona) }
-                    root.setOnLongClickListener {
-                        onDelete?.invoke(persona)
-                        true
-                    }
-                } else {
-                    root.setOnClickListener(null)
-                    root.setOnLongClickListener(null)
-                }
+        fun bind(persona: Persona) = with(binding) {
+            val context = root.context
+            tvNombre.text = persona.nombreApellido
+            tvPatente.text = persona.patente
+            tvDepto.text = context.getString(R.string.label_department_format, persona.departamento)
+            tvDetalle.text = context.getString(
+                R.string.persona_detail_format,
+                persona.descripcionAuto,
+                context.getString(PersonaType.fromCode(persona.tipoPersona).labelRes)
+            )
+            root.setOnClickListener { onEdit(persona) }
+            root.setOnLongClickListener {
+                onDelete(persona)
+                true
             }
         }
     }
 
-    companion object DiffCallback : DiffUtil.ItemCallback<Persona>() {
-        override fun areItemsTheSame(oldItem: Persona, newItem: Persona) = oldItem.id == newItem.id
-        override fun areContentsTheSame(oldItem: Persona, newItem: Persona) = oldItem == newItem
+    private object Diff : DiffUtil.ItemCallback<Persona>() {
+        override fun areItemsTheSame(old: Persona, new: Persona) = old.id == new.id
+        override fun areContentsTheSame(old: Persona, new: Persona) = old == new
     }
 }

@@ -1,62 +1,161 @@
-# Arquitectura Técnica — Controlate Android
+# Arquitectura técnica — Controlate Android
 
-## 1. Visión General
+## 1. Visión general
 
-`controlate-android` implementa una arquitectura en capas (**Presentation / UI -> Domain -> Data**) inspirada en Clean Architecture y el patrón **MVVM**, optimizada para operación **offline-first** en dispositivos Android (`minSdk = 26`, `targetSdk = 36`).
+Aplicación de un solo módulo (`:app`) organizada en tres capas por paquete, con la regla de dependencia de Clean Architecture: **presentación → dominio ← datos**. El dominio no conoce Android salvo por las anotaciones de Room en las entidades (ver ADR-005).
+
+El catálogo completo de diagramas (contexto funcional, contratos, ER, estados y secuencias) está en [docs/DIAGRAMS.md](DIAGRAMS.md).
 
 ```mermaid
-flowchart LR
-    subgraph Presentation["Capa Presentation (UI)"]
-        ACT["Activities / BottomSheets"]
-        VM["ViewModels"]
+flowchart TB
+    subgraph ui["ui/ (presentación)"]
+        direction LR
+        ACT["Activity / BottomSheet / Adapter"] -->|intenciones| VM["ViewModel"]
+        VM -->|StateFlow&lt;UiState&gt; + eventos| ACT
     end
-    subgraph Domain["Capa Domain"]
+    subgraph domain["domain/"]
         UC["UseCases"]
-        MOD["Domain Models & Result"]
+        CONTRACTS["repository/*, ReportExporter, ReportLabels, Clock"]
+        VAL["validation/: Rut, Patente"]
     end
-    subgraph Data["Capa Data"]
-        REPO["Repositories"]
-        ROOM["Room (AppDatabase v17)"]
-        PREFS["SessionManager & SecurityManager"]
+    subgraph data["data/"]
+        ROOM["Room: entities, dao, AppDatabase, Migration17To18"]
+        REPO["Room*Repository"]
+        PDFW["PdfReportWriter + ReportStore"]
+        SEC["AdminPinManager + EncryptedKeyValueStore"]
+        SES["SessionManager (SessionStore)"]
     end
-
-    ACT --> VM
     VM --> UC
-    UC --> REPO
+    UC --> CONTRACTS
+    UC --> VAL
+    REPO -. implementa .-> CONTRACTS
+    PDFW -. implementa .-> CONTRACTS
+    SES -. implementa .-> CONTRACTS
     REPO --> ROOM
-    UC --> PREFS
 ```
 
-## 2. Capas y Responsabilidades
+### Responsabilidades
 
-### Presentation (`porteria/ui/`)
-- **Activities y BottomSheets:** Renderizado declarativo con XML + `ViewBinding`. Sin lógica de negocio ni acceso directo a DAOs.
-- **ViewModels:** Exponen estado observable (`StateFlow` / `LiveData`) y delegan acciones en casos de uso.
+| Capa | Contiene | No contiene |
+| :--- | :--- | :--- |
+| `ui/` | Renderizado (ViewBinding), mapeo de códigos de dominio a recursos (`ui/common/Labels.kt`), navegación, diálogos. | Reglas de negocio, SQL, I/O de archivos. |
+| `ui/*ViewModel` | Estado de pantalla (`StateFlow`), eventos de una sola vez (`EventChannel`), orquestación de casos de uso. | `Context`, recursos o vistas. Los mensajes viajan como `UiMessage(@StringRes)`. |
+| `domain/` | Casos de uso, validación, modelos, contratos, formato de tiempo, parser CSV, contenido de reportes. | Implementaciones de persistencia y APIs de Android. |
+| `data/` | Room, migraciones, carga semilla, sesión, seguridad del PIN y PDF. | Decisiones de negocio. |
 
-### Domain (`porteria/domain/`)
-- **UseCases:** Encapsulan reglas de negocio reutilizables (`ValidateRegistroUseCase`, `SaveRegistroUseCase`, `MarkExitUseCase`, `SearchPersonaUseCase`, `ExportShiftReportUseCase`).
-- **Modelos:** `PersonaType`, `ShiftType`, `ShiftInfo` y el wrapper tipado `Result`.
+### Grafo de dependencias (Koin)
 
-### Data (`porteria/data/`)
-- **Room (`AppDatabase` v17):** Fuente única de verdad local con migraciones explícitas (`12->13` hasta `16->17`) y `SeedCallback` para precarga inicial desde `res/raw/`.
-- **Seguridad (`SecurityManager` + `PinSecurityHelper`):** Almacenamiento cifrado con `EncryptedSharedPreferences` y derivación de PIN con `PBKDF2WithHmacSHA256`.
-- **Sesión (`SessionManager`):** Contexto del turno activo (`guardia`, `shiftId`, `controlPoint`, `turnoTipo`).
+- `dataModule`: base de datos, DAOs, repositorios (`bind` a su interfaz), `AdminPinManager`, `ReportStore`, `ReportExporter`, `ReportLabels`, `Clock`.
+- `domainModule`: casos de uso como `factory` (sin estado).
+- `presentationModule`: ViewModels. `ExamenViewModel` recibe el nombre del guardia por `parametersOf`.
+
+`KoinGraphTest` resuelve todos los ViewModels con Robolectric para detectar errores de cableado en CI.
+
+### Estado y eventos
+
+Cada pantalla sigue un flujo unidireccional:
+
+1. La vista llama a una función del ViewModel (`register`, `markExit`, `endShift`…).
+2. El ViewModel ejecuta el caso de uso en `viewModelScope` y actualiza `UiState` con `update {}`.
+3. Los efectos únicos (navegar, snackbar con **Deshacer**, compartir PDF) se emiten por un `Channel` y se recolectan con `repeatOnLifecycle(STARTED)`, así no se repiten tras una rotación.
+4. Los formularios (bottom sheets) consumen un canal propio (`formEvents`), separado del de la Activity, porque un `Channel` entrega cada evento a un solo colector.
 
 ---
 
-## 3. Architecture Decision Records (ADRs)
+## 2. Flujos principales
 
-### ADR-001: Estrategia Offline-First con Room y Migraciones Explícitas
-- **Contexto:** Las garitas y puntos de control perimetrales sufren cortes frecuentes de red móvil o Wi-Fi.
-- **Decisión:** Usar Room (SQLite) como almacenamiento primario obligatorio, con migraciones explícitas por versión y sin dependencia de backend para operar.
-- **Consecuencias:** Latencia cercana a cero en búsquedas y registros; requiere mantener disciplina estricta de migraciones al modificar entidades.
+### Ciclo de vida de un turno
 
-### ADR-002: Koin como Contenedor de Inyección de Dependencias
-- **Contexto:** Se requiere desacoplar DAOs, repositorios, `SecurityManager`, `SessionManager`, UseCases y ViewModels manteniendo tiempos de compilación rápidos.
-- **Decisión:** Utilizar Koin (`AppModule.kt`) frente a Dagger/Hilt.
-- **Consecuencias:** Configuración concisa en Kotlin puro y menor sobrecarga de compilación; la resolución de dependencias se valida en tiempo de ejecución o pruebas de grafo.
+```mermaid
+stateDiagram-v2
+    [*] --> SinTurno
+    SinTurno --> Abierto: StartShiftUseCase\n(inserta turnos, guarda puntero en SessionStore)
+    Abierto --> Abierto: ingresos / salidas / deshacer
+    Abierto --> Cerrado: EndShiftUseCase\n(genera PDF, fija finalizadoAt, limpia sesión)
+    Abierto --> SinTurno: sesión apunta a turno inexistente\n(GetActiveShiftUseCase la limpia)
+    Cerrado --> [*]: Admin borra datos operativos\n(cascada a registros)
+```
 
-### ADR-003: Autenticación Administrativa Local sin Credenciales por Defecto
-- **Contexto:** Una aplicación distribuida públicamente no debe incluir PINs o contraseñas por defecto en el código fuente.
-- **Decisión:** Exigir la configuración del PIN administrativo en el primer acceso, derivar el secreto con `PBKDF2WithHmacSHA256` (100.000 iteraciones + salt aleatorio de 16 bytes), almacenar el hash en `EncryptedSharedPreferences` y aplicar bloqueo temporal de 30 s tras 5 intentos fallidos.
-- **Consecuencias:** Elimina exposición de secretos en el repositorio y mitiga ataques de fuerza bruta local.
+### Acceso de administrador
+
+```mermaid
+sequenceDiagram
+    actor A as Administrador
+    participant L as LoginActivity
+    participant VM as LoginViewModel
+    participant P as AdminPinManager
+
+    A->>L: Vista Admin
+    L->>VM: onAdminClicked()
+    alt sin PIN configurado
+        VM-->>L: AskPinSetup
+        A->>L: PIN + confirmación
+        L->>VM: setupPin()
+        VM->>P: setPin() en Dispatchers.Default
+    else bloqueado
+        VM-->>L: Message(espera N s)
+    else
+        VM-->>L: AskPin
+        A->>L: PIN
+        L->>VM: submitPin()
+        VM->>P: verify() en Dispatchers.Default
+        P-->>VM: Granted | Denied(restantes) | LockedOut(s)
+    end
+    VM-->>L: OpenAdmin / Message
+```
+
+---
+
+## 3. Persistencia
+
+- **Fuente única de verdad:** SQLite (Room). La sesión en `SharedPreferences` guarda solo el **id** del turno abierto; los datos del turno viven en la tabla `turnos`.
+- **Tiempo:** `entradaAt`, `salidaAt`, `iniciadoAt` y `finalizadoAt` son epoch millis. `TimeFormat` (java.time) los formatea en la zona del dispositivo. Las estadísticas diarias usan el rango `[00:00, 24:00)` local.
+- **Códigos estables:** `tipoPersona` (`PersonaType.name`), `tipo` de turno (`ShiftType.name`) y `controlPoint` (`ControlPoint.id`). Las etiquetas visibles salen de `strings.xml`.
+- **Integridad:** FK `shiftId → turnos.id` con `ON DELETE CASCADE`; índice único en `personas.patente` y en `examen_preguntas.pregunta`; índices en `shiftId`, `entradaAt`, `rut` y `patente`.
+- **Búsqueda:** `instr(upper(col), upper(:q))` en lugar de `LIKE`, para que `%` y `_` del usuario no sean comodines.
+- **Carga semilla:** `DatabaseSeeder` corre una sola vez por arranque, en serie: el directorio demo solo en instalaciones nuevas y el banco OS-10 cuando la tabla está vacía, con inserción idempotente.
+
+### Migraciones
+
+| Versión | Cambio |
+| :--- | :--- |
+| 12 → 17 | Columnas incrementales del bicicletero y tablas del examen (heredadas). |
+| 17 → 18 | Crea `turnos` desde los datos repetidos en cada registro. Convierte fecha y hora de texto a epoch millis (si la salida tiene hora menor a la entrada, cuenta como del día siguiente). Normaliza RUT y `tipoPersona`, unifica el formato de fecha del bicicletero, elimina preguntas duplicadas y recupera el turno abierto que versiones anteriores guardaban solo en preferencias (`LegacyActiveShift`). |
+
+`Migration17To18Test` crea una base v17 real con `MigrationTestHelper`, la migra y valida el esquema contra `app/schemas/…/18.json`.
+
+---
+
+## 4. Architecture Decision Records
+
+### ADR-001 — Offline-first con Room como fuente única de verdad
+- **Contexto:** las garitas tienen conectividad nula o intermitente.
+- **Decisión:** toda operación se persiste localmente; no hay backend.
+- **Consecuencias:** latencia mínima y operación garantizada. Requiere disciplina de migraciones (esquema exportado y testeado) y no hay consolidación entre dispositivos.
+
+### ADR-002 — Koin para inyección de dependencias
+- **Contexto:** proyecto mediano y un solo módulo, con prioridad en builds rápidos.
+- **Decisión:** Koin con módulos por capa.
+- **Consecuencias:** sin generación de código. Los errores de cableado se detectan en tiempo de ejecución, mitigado con `KoinGraphTest`.
+
+### ADR-003 — PIN de administrador local sin credenciales por defecto
+- **Decisión:** PIN definido en el primer uso, hash PBKDF2-HMAC-SHA256 (100 000 iteraciones y salt de 16 bytes), almacenamiento en `EncryptedSharedPreferences`, bloqueo de 30 s tras 5 fallos y `commit()` síncrono del contador.
+- **Consecuencias:** sin secretos en el repositorio. La lógica (`AdminPinManager`) se prueba sin Android gracias a la abstracción `KeyValueStore`.
+
+### ADR-004 — Instantes en epoch millis y turnos como entidad
+- **Contexto:** la v17 guardaba `"HH:mm"` y fechas en dos formatos distintos, y repetía guardia, punto y tipo de turno en cada registro. Esto rompía los turnos nocturnos (`MIN("02:00") < "21:00"`) y las estadísticas diarias.
+- **Decisión:** tabla `turnos` como raíz de agregación con FK desde los registros y tiempos en epoch millis.
+- **Consecuencias:** consultas correctas y reportes coherentes, a cambio de una migración no trivial (cubierta por tests).
+
+### ADR-005 — Entidades Room como modelos de dominio
+- **Contexto:** las entidades son `data class` planas; un modelo de dominio paralelo duplicaría cada clase y su mapeo 1:1.
+- **Decisión:** el dominio reutiliza las entidades y define **contratos** de repositorio propios (`domain/repository`). Las reglas de negocio no dependen de Room, solo de esas interfaces.
+- **Consecuencias:** menos código. Costo: el dominio importa las anotaciones de Room. Si la persistencia cambiara, habría que introducir modelos propios.
+
+### ADR-006 — Estado de UI con StateFlow y eventos por Channel
+- **Decisión:** `StateFlow<UiState>` para el estado y `Channel` (`EventChannel`) para efectos únicos. Se elimina LiveData.
+- **Consecuencias:** ViewModels testeables con `kotlinx-coroutines-test` (incluido tiempo virtual para el temporizador del examen) y sin eventos repetidos tras rotaciones.
+
+### ADR-007 — Reportes PDF nativos, contenido en el dominio
+- **Decisión:** `BuildReportUseCase` produce un `ReportDocument` (columnas, filas y metadatos) y `PdfReportWriter` lo dibuja con `android.graphics.pdf` en `Dispatchers.IO`. Los PDF se guardan en `files/reports` y se comparten vía `FileProvider`.
+- **Consecuencias:** sin dependencias pesadas y el contenido del reporte queda testeado. El diseño visual del PDF es simple (tabla paginada).

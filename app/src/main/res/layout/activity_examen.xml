@@ -5,14 +5,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#121212"
     android:padding="16dp">
 
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbarExamen"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#121212"
+        android:background="@color/background"
         app:navigationIcon="@drawable/ic_arrow_back"
         app:navigationIconTint="@color/white"
         app:title="Examen OS-10 (60 Preguntas)"
@@ -177,7 +176,7 @@
             android:layout_height="54dp"
             android:layout_marginEnd="8dp"
             android:layout_weight="1"
-            android:text="Anterior"
+            android:text="@string/examen_btn_anterior"
             android:textColor="@color/white"
             app:strokeColor="#555555" />
 
@@ -188,7 +187,7 @@
             android:layout_marginStart="8dp"
             android:layout_weight="1"
             android:backgroundTint="@color/bicicletero1_primary"
-            android:text="Siguiente"
+            android:text="@string/examen_btn_siguiente"
             android:textColor="@color/white" />
 
         <com.google.android.material.button.MaterialButton
@@ -198,7 +197,7 @@
             android:layout_marginStart="8dp"
             android:layout_weight="1"
             android:backgroundTint="#D32F2F"
-            android:text="Finalizar"
+            android:text="@string/examen_btn_finalizar"
             android:textColor="@color/white"
             android:visibility="gone"
             tools:visibility="visible" />

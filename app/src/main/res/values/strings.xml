@@ -1,30 +1,21 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">Controlate</string>
     <string name="app_name_uppercase">CONTROLATE</string>
     <string name="btn_export">Exportar</string>
-    <string name="btn_history">Historial</string>
-    <string name="btn_end_shift">Cerrar Turno</string>
-    <string name="btn_nuevo_ingreso">NUEVO INGRESO</string>
-    <string name="search_hint">Buscar por patente o nombre...</string>
-    <string name="desc_directory">Directorio</string>
-    <string name="desc_settings">Ajustes</string>
+    <string name="search_hint">Buscar por patente o nombre…</string>
     <string name="stat_dentro">DENTRO</string>
     <string name="stat_salieron">SALIERON</string>
-    <string name="stat_total">TOTAL</string>
-    <string name="nombre_rut_format">%1$s - %2$s</string>
+    <string name="nombre_rut_format">%1$s · %2$s</string>
     <string name="entrada_format">Entrada: %1$s</string>
     <string name="salida_format">Salida: %1$s</string>
     <string name="bicicletero_1">Punto Bicicleta 1</string>
     <string name="bicicletero_2">Punto Bicicleta 2</string>
-    <string name="acceso_1">Acceso 1</string>
     <string name="porteria_2">Portería 2</string>
     <string name="porteria_3">Portería 3</string>
     <string name="porteria_4">Portería 4</string>
-    <string name="estacionamiento">Acceso Estacionamiento</string>
     <string name="end_shift_content_description">Finalizar turno</string>
-    <string name="search_patent_hint">Buscar patente...</string>
+    <string name="search_patent_hint">Buscar patente…</string>
     <string name="new_entry_short">NUEVO</string>
-    <string name="admin_only_edit_records">Solo el administrador puede modificar registros.</string>
     <string name="count_zero">0</string>
     <string name="login_guard_name_hint">Nombre del guardia</string>
     <string name="login_shift_type_label">Tipo de turno</string>
@@ -39,15 +30,13 @@
     <string name="login_about">Informacion</string>
     <string name="login_shift_date">Fecha de turno: %1$s</string>
     <string name="login_guard_name_error">Ingresa tu nombre</string>
-    <string name="login_control_point_error">Selecciona un punto valido</string>
     <string name="login_about_title">Informacion</string>
     <string name="login_about_message">Controlate Android\nRepositorio: github.com/dur1al/controlate-android</string>
     <string name="dialog_close">Cerrar</string>
     <string name="dialog_cancel">Cancelar</string>
-    <string name="login_admin_password_hint">PIN Admin (4-8 dígitos)</string>
+    <string name="login_admin_password_hint">PIN admin (4 a 8 dígitos)</string>
     <string name="login_admin_title">Acceso Administrador</string>
     <string name="login_admin_enter">Ingresar</string>
-    <string name="login_admin_wrong_password">PIN incorrecto</string>
     <string name="login_admin_setup_title">Configurar PIN Administrador</string>
     <string name="login_admin_setup_message">Primer acceso: define un PIN numérico de 4 a 8 dígitos para proteger el panel administrativo.</string>
     <string name="login_admin_pin_confirm_hint">Confirmar PIN</string>
@@ -59,14 +48,12 @@
     <string name="admin_dashboard_scope_hint">Vista de dashboard</string>
     <string name="admin_realtime_summary">RESUMEN EN TIEMPO REAL</string>
     <string name="admin_stat_entered">ENTRARON</string>
-    <string name="admin_management">GESTION</string>
     <string name="admin_operational_points">PUNTOS OPERATIVOS</string>
     <string name="admin_reports">Reportes</string>
-    <string name="admin_database">Base de datos</string>
     <string name="admin_delete_database">Borrar toda la base de datos</string>
     <string name="admin_export_summary">Exportar resumen admin</string>
-    <string name="dashboard_bicicletero_title">CONTROLATE - BICICLETERO</string>
-    <string name="search_rut_hint">Buscar RUT...</string>
+    <string name="dashboard_bicicletero_title">CONTROLATE · BICICLETERO</string>
+    <string name="search_rut_hint">Buscar por RUT o nombre…</string>
     <string name="register_entry_title">Registro de ingreso</string>
     <string name="register_bike_title">Registro bicicleta</string>
     <string name="directory_button">Directorio</string>
@@ -84,15 +71,10 @@
     <string name="type_student">Estudiante</string>
     <string name="type_employee">Funcionario</string>
     <string name="register_button">Registrar</string>
-    <string name="required_field">Obligatorio</string>
-    <string name="invalid_rut">RUT invalido</string>
-    <string name="invalid_rut_message">Error: RUT ingresado es invalido</string>
     <string name="entry_registered">Entrada registrada</string>
-    <string name="exit_registered">Salida registrada</string>
     <string name="end_shift_title">Finalizar turno</string>
     <string name="end_shift_message">Deseas finalizar el turno?</string>
     <string name="end_shift_bike_message">Deseas cerrar el turno? El reporte quedara disponible para administracion.</string>
-    <string name="dialog_yes">Si</string>
     <string name="dialog_yes_finish">Si, finalizar</string>
     <string name="dialog_no">No</string>
     <string name="mark_exit_content_description">Marcar salida</string>
@@ -103,24 +85,16 @@
     <string name="reports_menu_filter_date">Filtrar fecha</string>
     <string name="reports_menu_clear_filter">Quitar filtro</string>
     <string name="reports_filter_subtitle">Filtro: %1$s</string>
-    <string name="reports_saved_title">Reportes guardados</string>
     <string name="reports_saved_pick">Selecciona un reporte</string>
     <string name="reports_saved_empty">No hay reportes guardados aun</string>
-    <string name="reports_saved_empty_day">No hay reportes para esa fecha</string>
-    <string name="reports_saved_all_count">Todos (%1$d)</string>
-    <string name="reports_saved_day_count">%1$s (%2$d)</string>
     <string name="reports_saved_item">%1$s  |  %2$s</string>
-    <string name="reports_export_success">Reporte exportado: %1$s</string>
     <string name="reports_export_empty">Este turno no tiene registros para exportar</string>
-    <string name="reports_export_error">Error: %1$s</string>
     <string name="reports_delete_title">Eliminar reporte</string>
     <string name="reports_delete_message">Seguro de eliminar este turno? Esta accion no se puede deshacer.</string>
     <string name="reports_delete_confirm">Eliminar</string>
     <string name="report_guard_label">Guardia: %1$s</string>
     <string name="report_shift_info">Fecha: %1$s | Punto: %2$s</string>
     <string name="directory_title">Directorio</string>
-    <string name="directory_search_plate">Buscar por patente</string>
-    <string name="directory_search_name">Buscar por nombre</string>
     <string name="directory_empty">Sin resultados</string>
     <string name="database_title">Gestion de datos</string>
     <string name="database_maintenance">MANTENIMIENTO</string>
@@ -129,73 +103,38 @@
     <string name="database_export">Exportar base de datos</string>
     <string name="import_paste_csv">Pega los datos separados por coma (,)</string>
     <string name="import_format">Formato: PATENTE, NOMBRE, DEPTO, RUT, PADRON, EMPRESA, VEHICULO, TIPO</string>
-    <string name="import_example">Ej: ABCD12, Juan Perez, 101, 12.345.678-9</string>
+    <string name="import_example" tools:ignore="TypographyDashes">Ej: ABCD12, Juan Pérez, 101, 12.345.678-5</string>
     <string name="import_button">IMPORTAR</string>
-    <string name="export_generated_saved">Reporte generado y guardado</string>
-    <string name="bike_detail_format">%1$s - %2$s</string>
+    <string name="bike_detail_format">%1$s · %2$s</string>
 
     <!-- Admin / Settings dialogs -->
     <string name="admin_delete_operational_title">Borrar registros operativos</string>
     <string name="admin_delete_operational_message">Se eliminarán registros de portería y bicicletero. El directorio de personas no se borra.</string>
     <string name="admin_delete_operational_success">Registros operativos eliminados</string>
-    <string name="admin_export_success">Resumen exportado: %1$s</string>
-    <string name="admin_export_empty">Sin datos para exportar</string>
-    <string name="admin_export_error">Error exportando: %1$s</string>
     <string name="dialog_confirm">Confirmar</string>
 
     <!-- Settings -->
-    <string name="settings_clear_title">Limpiar registros</string>
-    <string name="settings_clear_message">Esto borrará solo los registros operativos (portería y bicicletero). El directorio de personas no se elimina.</string>
-    <string name="settings_clear_confirm">Sí, limpiar</string>
-    <string name="settings_clear_success">Registros eliminados</string>
     <string name="settings_import_paste_error">Por favor, pega los datos primero</string>
-    <string name="settings_import_validation_title">Error de Validación</string>
-    <string name="settings_import_validation_message">Se encontraron errores en el formato:\n\n%1$s\n\nRevisa que cada línea tenga exactamente 7 campos separados por \';\' .</string>
-    <string name="settings_import_success_title">Importación Exitosa</string>
-    <string name="settings_import_success_message">Se han añadido %1$d personas al directorio correctamente.</string>
-    <string name="settings_import_line_invalid_format">Línea %1$d: Formato inválido. Se requieren 7 campos (6 puntos y coma). Encontrados: %2$d</string>
-    <string name="settings_import_line_missing_plate">Línea %1$d: La patente es obligatoria.</string>
-    <string name="settings_import_line_missing_name">Línea %1$d: El nombre es obligatorio.</string>
-    <string name="settings_import_more_errors">… y %1$d errores más.</string>
-    <string name="settings_export_today_success">Excel generado: %1$s</string>
-    <string name="settings_export_today_empty">No hay registros hoy</string>
-    <string name="settings_export_all_empty">No hay registros en la base de datos</string>
-    <string name="settings_export_error">Error: %1$s</string>
     <string name="dialog_ok">OK</string>
-    <string name="dialog_understood">Entendido</string>
 
     <!-- Bicicletero -->
-    <string name="bici_rut_name_required">RUT y Nombre son obligatorios</string>
-    <string name="bici_register_error">Error al registrar</string>
-    <string name="bici_export_error">Error: %1$s</string>
     <string name="bici_export_empty">Sin datos para exportar</string>
 
     <!-- Shift types (domain model) -->
-    <string name="shift_type_day">DIA (08:00 - 20:00)</string>
-    <string name="shift_type_night">NOCHE (20:00 - 08:00)</string>
+    <string name="shift_type_day">Día (08:00 – 20:00)</string>
+    <string name="shift_type_night">Noche (20:00 – 08:00)</string>
 
     <!-- Database manager (previously hardcoded) -->
-    <string name="db_export_success">PDF exportado: %1$s</string>
-    <string name="db_export_empty">No hay datos para exportar</string>
-    <string name="db_export_error">Error exportando: %1$s</string>
     <string name="db_import_review">Revisa el archivo</string>
-    <string name="db_import_success">Se importaron %1$d registros correctamente</string>
+    <string name="db_import_success">Importación completa. Personas cargadas: %1$d</string>
     <string name="db_import_error_min_fields">Linea %1$d: agrega al menos patente y nombre.</string>
     <string name="db_import_error_plate">Linea %1$d: patente invalida.</string>
     <string name="db_import_error_name">Linea %1$d: nombre obligatorio.</string>
     <string name="db_import_error_rut">Linea %1$d: RUT invalido.</string>
-    <string name="db_import_more_errors">… y %1$d errores mas.</string>
+    <string name="db_import_more_errors">Errores adicionales sin mostrar: %1$d</string>
     <string name="db_no_directory_data">No hay datos en el directorio para exportar</string>
 
     <!-- Admin dashboard (previously hardcoded) -->
-    <string name="admin_dashboard_export_success">Resumen PDF generado</string>
-    <string name="admin_dashboard_export_empty">No hay datos para exportar</string>
-    <string name="admin_dashboard_export_error">Error: %1$s</string>
-    <string name="admin_dashboard_title">Panel de Administración</string>
-    <string name="admin_dashboard_entries_today">Ingresos Hoy</string>
-    <string name="admin_dashboard_exits_today">Salidas Hoy</string>
-    <string name="admin_dashboard_inside">En Recinto</string>
-    <string name="admin_dashboard_generate_pdf">Exportar Resumen PDF</string>
 
     <!-- Status badges -->
     <!-- Status badges -->
@@ -203,11 +142,9 @@
     <string name="status_exited">SALIÓ</string>
     <string name="empty_state_text">No hay registros aún.\nPulsa el botón inferior para empezar.</string>
 
-    <string name="admin_dashboard_live_logs">Registros en tiempo real</string>
     <string name="autofill_match_found">Datos cargados desde el directorio</string>
 
     <!-- Examen OS-10 -->
-    <string name="examen_title">Simulador Examen OS-10 (60 Preguntas)</string>
     <string name="examen_btn_iniciar">Examen OS-10 Guardias</string>
     <string name="examen_pregunta_format">Pregunta %1$d de %2$d</string>
     <string name="examen_resultado_titulo">Resultado Examen OS-10</string>
@@ -217,4 +154,115 @@
     <string name="examen_btn_anterior">Anterior</string>
     <string name="examen_btn_siguiente">Siguiente</string>
     <string name="examen_btn_finalizar">Finalizar</string>
+
+    <!-- Puntos de control, tipos y turnos (etiquetas de códigos de dominio) -->
+    <string name="persona_type_visita">Visita</string>
+    <string name="persona_type_estudiante">Estudiante</string>
+    <string name="persona_type_funcionario">Funcionario</string>
+    <string name="persona_type_proveedor">Proveedor</string>
+    <string name="persona_type_otro">Otro</string>
+    <string name="unknown_control_point">Punto desconocido (%1$s)</string>
+
+    <!-- Validación de formularios -->
+    <string name="error_plate_format">La patente debe tener entre 4 y 6 letras o números</string>
+    <string name="error_name_required">El nombre es obligatorio</string>
+    <string name="error_name_too_short">El nombre debe tener al menos 2 caracteres</string>
+    <string name="error_rut_required">El RUT es obligatorio</string>
+    <string name="error_rut_invalid">El RUT no es válido. Revisa el dígito verificador</string>
+    <string name="error_padron_required">Ingresa el número de padrón</string>
+    <string name="error_career_required">La carrera o departamento es obligatorio</string>
+    <string name="error_generic">Ocurrió un error inesperado. Intenta nuevamente.</string>
+
+    <!-- Salidas con deshacer -->
+    <string name="exit_registered_for">Salida registrada: %1$s</string>
+    <string name="exit_already_registered">Este registro ya tenía salida</string>
+    <string name="action_undo">Deshacer</string>
+    <string name="exit_undone">Salida anulada</string>
+    <string name="bike_tap_to_exit">Toca para registrar salida</string>
+
+    <!-- Admin -->
+    <string name="admin_directory">Directorio de personas</string>
+    <string name="admin_point_stats_format">Entraron %1$d · Salieron %2$d · Dentro %3$d</string>
+    <string name="admin_scope_general">General (todos los puntos)</string>
+    <string name="admin_pin_wrong_attempts">PIN incorrecto. Intentos restantes: %1$d</string>
+    <string name="admin_settings">Configuración</string>
+    <string name="settings_pin_updated">PIN actualizado</string>
+    <string name="settings_pin_current_wrong">PIN actual incorrecto</string>
+    <string name="settings_pin_fill_fields">Completa ambos campos</string>
+    <string name="directory_edit_title">Editar persona</string>
+    <string name="directory_delete_title">Eliminar persona</string>
+    <string name="directory_delete_message">¿Eliminar a %1$s del directorio?</string>
+    <string name="directory_updated">Persona actualizada</string>
+    <string name="directory_deleted">Persona eliminada</string>
+    <string name="dialog_save">Guardar</string>
+    <string name="dialog_delete">Eliminar</string>
+    <string name="label_department_format">Depto: %1$s</string>
+    <string name="persona_detail_format">%1$s · %2$s</string>
+    <string name="registro_detail_format">%1$s · Entrada %2$s</string>
+    <string name="registro_detail_exit_format">%1$s · Entrada %2$s · Salida %3$s</string>
+    <string name="report_shift_time_format">%1$s · %2$s a %3$s</string>
+    <string name="report_shift_open">en curso</string>
+    <string name="report_closed_count">Salidas: %1$d/%2$d</string>
+    <string name="report_type_porteria">PORTERÍA</string>
+    <string name="report_type_bicicletero">BICICLETERO</string>
+
+    <!-- Reportes PDF -->
+    <string name="pdf_title_vehicle_shift">Reporte de ingresos vehiculares</string>
+    <string name="pdf_title_bike_shift">Reporte de bicicletero</string>
+    <string name="pdf_title_daily_summary">Resumen administrativo diario</string>
+    <string name="pdf_title_directory">Directorio de personas</string>
+    <string name="pdf_meta_point">Punto: %1$s</string>
+    <string name="pdf_meta_date">Fecha: %1$s</string>
+    <string name="pdf_meta_guard">Guardia responsable: %1$s</string>
+    <string name="pdf_meta_shift">Turno: %1$s</string>
+    <string name="pdf_generated_at">Generado: %1$s</string>
+    <string name="pdf_page_of">Página %1$d de %2$d</string>
+    <string name="pdf_total_row">TOTAL</string>
+    <string name="pdf_watermark">CONTROLATE</string>
+    <string name="pdf_col_index">N°</string>
+    <string name="pdf_col_patente">PATENTE</string>
+    <string name="pdf_col_nombre">NOMBRE</string>
+    <string name="pdf_col_rut">RUT</string>
+    <string name="pdf_col_depto">DEPTO</string>
+    <string name="pdf_col_tipo">TIPO</string>
+    <string name="pdf_col_carrera">CARRERA</string>
+    <string name="pdf_col_entrada">ENTRADA</string>
+    <string name="pdf_col_salida">SALIDA</string>
+    <string name="pdf_col_punto">PUNTO</string>
+    <string name="pdf_col_entraron">ENTRARON</string>
+    <string name="pdf_col_salieron">SALIERON</string>
+    <string name="pdf_col_dentro">DENTRO</string>
+    <string name="share_report_chooser">Compartir reporte</string>
+    <string name="share_report_unavailable">No hay una app para compartir el PDF. Quedó guardado en Reportes &gt; Guardados.</string>
+
+    <!-- Examen -->
+    <string name="examen_exit_title">Salir del examen</string>
+    <string name="examen_exit_message">Se perderá el progreso de este intento.</string>
+    <string name="examen_exit_confirm">Salir</string>
+    <string name="examen_finish_title">Entregar examen</string>
+    <string name="examen_finish_partial">Respondidas: %1$d de %2$d. ¿Entregar ahora?</string>
+    <string name="examen_finish_complete">Respondiste todas las preguntas. ¿Entregar ahora?</string>
+    <string name="examen_finish_confirm">Entregar</string>
+    <string name="examen_keep_answering">Seguir respondiendo</string>
+    <string name="examen_option_format">%1$s) %2$s</string>
+    <string name="examen_empty_bank">No hay preguntas disponibles en el banco local.</string>
+
+    <!-- Títulos de pantallas (manifest) -->
+    <string name="title_admin">Panel administrador</string>
+    <string name="title_bicicletero">Bitácora bicicletas</string>
+    <string name="title_directory_admin">Gestión de directorio</string>
+    <string name="title_reports">Reportes de turnos</string>
+    <string name="title_database">Gestión de datos</string>
+    <string name="title_settings">Ajustes</string>
+    <string name="title_examen">Examen OS-10</string>
+    <string name="settings_change_pin_title">Cambiar PIN de administrador</string>
+    <string name="settings_current_pin">PIN actual</string>
+    <string name="settings_new_pin">Nuevo PIN (4 a 8 dígitos)</string>
+    <string name="settings_save_pin">Guardar PIN</string>
+    <string name="examen_resultado_puntaje">%1$d / %2$d</string>
+    <string name="examen_resultado_porcentaje">%1$.1f%%</string>
+    <string name="examen_resultado_guardia">Guardia: %1$s</string>
+    <string name="examen_resultado_fecha">Fecha: %1$s</string>
+    <string name="examen_resultado_tiempo">Tiempo empleado: %1$d min %2$d s</string>
+    <string name="examen_timer_format">%1$02d:%2$02d</string>
 </resources>
