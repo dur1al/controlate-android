@@ -1,6 +1,6 @@
 repository:
   name: controlate-android
-  description: "Aplicación Android offline-first para control de accesos en porterías, bicicletero y simulador OS-10 en Kotlin"
+  description: "Aplicación Android offline-first para control de accesos vehiculares y bicicletero en porterías"
   private: true
   topics:
     - android

@@ -34,7 +34,7 @@ flowchart LR
 - **ViewModels:** Exponen estado observable (`StateFlow` / `LiveData`) y delegan acciones en casos de uso.
 
 ### Domain (`porteria/domain/`)
-- **UseCases:** Encapsulan reglas de negocio reutilizables (`ValidateRegistroUseCase`, `SaveRegistroUseCase`, `MarkExitUseCase`, `SearchPersonaUseCase`, `ExportShiftReportUseCase`, `GenerarExamenUseCase`, `CalcularResultadoExamenUseCase`).
+- **UseCases:** Encapsulan reglas de negocio reutilizables (`ValidateRegistroUseCase`, `SaveRegistroUseCase`, `MarkExitUseCase`, `SearchPersonaUseCase`, `ExportShiftReportUseCase`).
 - **Modelos:** `PersonaType`, `ShiftType`, `ShiftInfo` y el wrapper tipado `Result`.
 
 ### Data (`porteria/data/`)
