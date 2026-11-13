@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background">
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/svEntradaForm"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:fillViewport="true">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="@dimen/screen_padding"
+            android:paddingTop="20dp"
+            android:paddingBottom="32dp">
+
+            <TextView
+                android:id="@+id/tvTitle"
+                style="@style/Controlate.Text.Heading"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="@string/register_entry_title"
+                app:layout_constraintEnd_toStartOf="@id/btnViewDirectory"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnViewDirectory"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:minWidth="48dp"
+                android:text="@string/directory_button"
+                android:textColor="@color/primary_light"
+                android:visibility="gone"
+                app:icon="@drawable/ic_search"
+                app:iconTint="@color/primary_light"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilPatente"
+                style="@style/Controlate.OutlinedInput"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/section_gap"
+                android:hint="@string/plate_hint"
+                app:counterEnabled="true"
+                app:counterMaxLength="6"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvTitle">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etPatente"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/button_height"
+                    android:imeOptions="actionNext"
+                    android:inputType="textCapCharacters"
+                    android:maxLength="6"
+                    android:singleLine="true"
+                    android:textColor="@color/text_main" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilNombre"
+                style="@style/Controlate.OutlinedInput"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/field_gap"
+                android:hint="@string/full_name_hint"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tilPatente">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etNombre"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/button_height"
+                    android:imeOptions="actionNext"
+                    android:inputType="textPersonName|textCapWords"
+                    android:singleLine="true"
+                    android:textColor="@color/text_main" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilDepto"
+                style="@style/Controlate.OutlinedInput"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/field_gap"
+                android:hint="@string/department_hint"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tilNombre">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etDepto"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/button_height"
+                    android:imeOptions="actionNext"
+                    android:singleLine="true"
+                    android:textColor="@color/text_main" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilEmpresa"
+                style="@style/Controlate.OutlinedInput"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/field_gap"
+                android:hint="@string/company_hint"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tilDepto">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etEmpresa"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/button_height"
+                    android:imeOptions="actionNext"
+                    android:singleLine="true"
+                    android:textColor="@color/text_main" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilRut"
+                style="@style/Controlate.OutlinedInput"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/field_gap"
+                android:hint="@string/rut_hint"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tilEmpresa">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etRut"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/button_height"
+                    android:imeOptions="actionNext"
+                    android:inputType="textCapCharacters"
+                    android:singleLine="true"
+                    android:textColor="@color/text_main" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <CheckBox
+                android:id="@+id/cbEsPadron"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:minHeight="48dp"
+                android:text="@string/is_padron_label"
+                android:textColor="@color/text_main"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tilRut" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilPadron"
+                style="@style/Controlate.OutlinedInput"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/field_gap"
+                android:hint="@string/padron_hint"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/cbEsPadron">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etPadron"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/button_height"
+                    android:imeOptions="actionNext"
+                    android:singleLine="true"
+                    android:textColor="@color/text_main" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilAuto"
+                style="@style/Controlate.OutlinedInput"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/field_gap"
+                android:hint="@string/car_comment_hint"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tilPadron">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etAuto"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/button_height"
+                    android:imeOptions="actionDone"
+                    android:singleLine="true"
+                    android:textColor="@color/text_main" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <RadioGroup
+                android:id="@+id/rgTipoPersona"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/section_gap"
+                android:orientation="horizontal"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tilAuto">
+
+                <RadioButton
+                    android:id="@+id/rbVisita"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:minHeight="48dp"
+                    android:text="@string/type_visit"
+                    android:textColor="@color/text_main" />
+
+                <RadioButton
+                    android:id="@+id/rbEstudiante"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:minHeight="48dp"
+                    android:text="@string/type_student"
+                    android:textColor="@color/text_main" />
+
+                <RadioButton
+                    android:id="@+id/rbFuncionario"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:minHeight="48dp"
+                    android:text="@string/type_employee"
+                    android:textColor="@color/text_main" />
+            </RadioGroup>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnGuardar"
+                style="@style/Controlate.Button.Primary"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/button_height"
+                android:layout_marginTop="20dp"
+                android:backgroundTint="@color/primary"
+                android:text="@string/register_button"
+                android:textSize="16sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/rgTipoPersona" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

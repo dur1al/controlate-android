@@ -1,0 +1,43 @@
+# IDE
+*.iml
+.idea/
+*.ipr
+*.iws
+
+# Gradle & Build
+.gradle/
+**/build/
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+*.ap_
+
+# Local configuration & SDK
+local.properties
+
+# Secrets, signing & environment
+.env
+.env.*
+!.env.example
+*.jks
+*.keystore
+*.p12
+*.pem
+*.pk8
+*.key
+keystore.properties
+credentials.json
+google-services.json
+
+# Local AI agent instructions
+AGENTS.md
+CLAUDE.md
+.claude/
+
+# OS & temporary files
+.DS_Store
+Thumbs.db
+*.log
+*.tmp

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base palette -->
+    <color name="black">#101113</color>
+    <color name="white">#FFFFFF</color>
+    <color name="background">#101113</color>
+    <color name="surface">#17191C</color>
+    <color name="surface_variant">#21242A</color>
+    <color name="surface_bicicletero">#10251F</color>
+    <color name="outline_soft">#343943</color>
+
+    <!-- Operational accents -->
+    <color name="primary">#7C4DFF</color>
+    <color name="primary_light">#BCA7FF</color>
+    <color name="bicicletero1_primary">#7C4DFF</color>
+    <color name="bicicletero1_variant">#5E35B1</color>
+    <color name="bicicletero2_primary">#00A884</color>
+    <color name="bicicletero2_variant">#00796B</color>
+
+    <!-- Per-point colors (unique visual identity) -->
+    <color name="point_acceso_1">#6C63FF</color>
+    <color name="point_porteria_2">#7C4DFF</color>
+    <color name="point_porteria_3">#536DFE</color>
+    <color name="point_porteria_4">#00E5FF</color>
+    <color name="point_estacionamiento">#448AFF</color>
+    <color name="point_bicicletero_1">#00BFA5</color>
+    <color name="point_bicicletero_2">#00C853</color>
+
+    <!-- Semantic UI -->
+    <color name="error_red">#FF6B6B</color>
+    <color name="warning_orange">#FFB74D</color>
+    <color name="success_green">#4CAF50</color>
+    <color name="text_main">#F4F1F8</color>
+    <color name="text_secondary">#C7C4D0</color>
+    <color name="text_hint">#AFA6C7</color>
+
+    <!-- Status badges -->
+    <color name="status_inside_bg">#1A4CAF50</color>
+    <color name="status_inside_text">#66BB6A</color>
+    <color name="status_exited_bg">#1A9E9E9E</color>
+    <color name="status_exited_text">#9E9E9E</color>
+
+    <!-- Badges -->
+    <color name="badge_depto_bg">#38414D</color>
+    <color name="badge_departamento">#3E4A5A</color>
+
+    <!-- Material 3 semantic defaults (paired with values-night/colors.xml) -->
+    <color name="onPrimary">#FFFFFF</color>
+    <color name="primaryContainer">#EADDFF</color>
+    <color name="onPrimaryContainer">#21005D</color>
+    <color name="secondary">#625B71</color>
+    <color name="onSecondary">#FFFFFF</color>
+    <color name="onBackground">#F4F1F8</color>
+    <color name="onSurface">#F4F1F8</color>
+    <color name="surfaceVariant">#21242A</color>
+    <color name="onSurfaceVariant">#C7C4D0</color>
+    <color name="accent_purple">#7C4DFF</color>
+</resources>
+

@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#121212"
+    android:padding="16dp">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbarExamen"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#121212"
+        app:navigationIcon="@drawable/ic_arrow_back"
+        app:navigationIconTint="@color/white"
+        app:title="Examen OS-10 (60 Preguntas)"
+        app:titleTextColor="@color/white"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/tvTimer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:background="@drawable/bg_badge_light"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="6dp"
+        android:textColor="@color/white"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        tools:text="59:45"
+        app:layout_constraintBottom_toBottomOf="@id/toolbarExamen"
+        app:layout_constraintEnd_toEndOf="@id/toolbarExamen"
+        app:layout_constraintTop_toTopOf="@id/toolbarExamen" />
+
+    <com.google.android.material.progressindicator.LinearProgressIndicator
+        android:id="@+id/progressExamen"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:max="60"
+        app:indicatorColor="@color/bicicletero1_primary"
+        app:layout_constraintTop_toBottomOf="@id/toolbarExamen"
+        tools:progress="15" />
+
+    <TextView
+        android:id="@+id/tvPreguntaContador"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textColor="#AAAAAA"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/progressExamen"
+        tools:text="Pregunta 1 de 60" />
+
+    <TextView
+        android:id="@+id/tvCategoria"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textColor="@color/bicicletero1_primary"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/progressExamen"
+        tools:text="Normativa Legal OS-10" />
+
+    <ScrollView
+        android:id="@+id/scrollPregunta"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp"
+        app:layout_constraintBottom_toTopOf="@id/layoutNavegacion"
+        app:layout_constraintTop_toBottomOf="@id/tvPreguntaContador">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardBackgroundColor="#1E1E1E"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                app:strokeColor="#333333"
+                app:strokeWidth="1dp">
+
+                <TextView
+                    android:id="@+id/tvPreguntaTexto"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp"
+                    android:textColor="@color/white"
+                    android:textSize="17sp"
+                    android:lineSpacingExtra="4dp"
+                    tools:text="¿Cuál es el porcentaje mínimo de aprobación requerido en el examen oficial de Carabineros OS-10?" />
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <RadioGroup
+                android:id="@+id/rgOpciones"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp">
+
+                <RadioButton
+                    android:id="@+id/rbOpcionA"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:background="@drawable/bg_tag_generic"
+                    android:buttonTint="@color/bicicletero1_primary"
+                    android:padding="12dp"
+                    android:textColor="@color/white"
+                    android:textSize="15sp"
+                    tools:text="A) 50%" />
+
+                <RadioButton
+                    android:id="@+id/rbOpcionB"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:background="@drawable/bg_tag_generic"
+                    android:buttonTint="@color/bicicletero1_primary"
+                    android:padding="12dp"
+                    android:textColor="@color/white"
+                    android:textSize="15sp"
+                    tools:text="B) 60%" />
+
+                <RadioButton
+                    android:id="@+id/rbOpcionC"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:background="@drawable/bg_tag_generic"
+                    android:buttonTint="@color/bicicletero1_primary"
+                    android:padding="12dp"
+                    android:textColor="@color/white"
+                    android:textSize="15sp"
+                    tools:text="C) 70%" />
+
+                <RadioButton
+                    android:id="@+id/rbOpcionD"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:background="@drawable/bg_tag_generic"
+                    android:buttonTint="@color/bicicletero1_primary"
+                    android:padding="12dp"
+                    android:textColor="@color/white"
+                    android:textSize="15sp"
+                    tools:text="D) 80%" />
+
+            </RadioGroup>
+
+        </LinearLayout>
+    </ScrollView>
+
+    <LinearLayout
+        android:id="@+id/layoutNavegacion"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnAnterior"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="0dp"
+            android:layout_height="54dp"
+            android:layout_marginEnd="8dp"
+            android:layout_weight="1"
+            android:text="Anterior"
+            android:textColor="@color/white"
+            app:strokeColor="#555555" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSiguiente"
+            android:layout_width="0dp"
+            android:layout_height="54dp"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:backgroundTint="@color/bicicletero1_primary"
+            android:text="Siguiente"
+            android:textColor="@color/white" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnFinalizar"
+            android:layout_width="0dp"
+            android:layout_height="54dp"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:backgroundTint="#D32F2F"
+            android:text="Finalizar"
+            android:textColor="@color/white"
+            android:visibility="gone"
+            tools:visibility="visible" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
