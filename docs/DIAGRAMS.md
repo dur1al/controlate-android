@@ -1,6 +1,6 @@
 # Diagramas del sistema — Controlate Android (v1.1.0)
 
-Vista arquitectónica completa del sistema en formato Mermaid, alineada al código fuente actual (`Room v18`, Clean Architecture + MVVM + Koin).
+Vista arquitectónica completa del sistema en formato Mermaid, alineada al código fuente actual (`Room v20`, Clean Architecture + MVVM + Koin).
 
 ---
 
@@ -8,7 +8,7 @@ Vista arquitectónica completa del sistema en formato Mermaid, alineada al códi
 
 ```mermaid
 flowchart LR
-    G(["Guardia en garita"])
+    G(["Guardia"])
     A(["Administrador"])
 
     subgraph Operacion["Operación offline-first en dispositivo"]
@@ -23,18 +23,19 @@ flowchart LR
         REP["Historial de turnos y exportación PDF"]
         DIR["Directorio de personas<br/>CRUD, importación CSV atómica, PDF"]
         CLR["Limpieza de datos operativos"]
+        PTS["Puntos de control<br/>Alta, renombre, activación"]
     end
 
     G --> T
     G --> PV
     G --> PB
-    G --> EX
 
     A --> PIN
     PIN --> MET
     PIN --> REP
     PIN --> DIR
     PIN --> CLR
+    PIN --> PTS
 ```
 
 ---
@@ -51,7 +52,7 @@ flowchart TB
 
     subgraph UI["ui/ (Presentación · MVVM)"]
         direction LR
-        ACT["Activities & BottomSheets<br/>Login · Porteria · Bicicletero<br/>Admin · ShiftReport · AdminDirectory<br/>DatabaseManager · Settings"]
+        ACT["Activities & BottomSheets<br/>Login · Porteria · Bicicletero<br/>Admin · ControlPoints · ShiftReport<br/>AdminDirectory · DatabaseManager · Settings"]
         VM["ViewModels<br/>StateFlow&lt;UiState&gt; + EventChannel"]
         LBL["ui/common/<br/>AndroidReportLabels · Labels"]
         ACT -->|intenciones| VM
@@ -60,8 +61,8 @@ flowchart TB
 
     subgraph DOMAIN["domain/ (Núcleo sin Android)"]
         direction LR
-        UC["usecase/<br/>Shift · Entry · Admin<br/>BuildReport · Validate"]
-        VAL["validation/ & importer/<br/>Rut · Patente · PersonaCsvParser"]
+        UC["usecase/<br/>Shift · Entry · Admin · ControlPoint<br/>BuildReport · Validate"]
+        VAL["validation/ & importer/<br/>Rut · RutInputFormatter · Patente<br/>PersonaCsvParser"]
         TIME["time/<br/>Clock · TimeFormat"]
         PORT["Contratos (puertos)<br/>Repositories · SessionStore<br/>ReportExporter · ReportLabels"]
         UC --> VAL
@@ -71,8 +72,8 @@ flowchart TB
 
     subgraph DATA["data/ (Implementación y I/O)"]
         direction LR
-        ROOM["local/database/ & dao/<br/>AppDatabase (v18) · Migration17To18<br/>DatabaseSeeder · DAOs"]
-        REPO["repository/<br/>RoomShift · RoomVehicleEntry<br/>RoomBikeEntry · RoomPersona"]
+        ROOM["local/database/ & dao/<br/>AppDatabase (v20) · migraciones<br/>DatabaseSeeder · DAOs"]
+        REPO["repository/<br/>RoomShift · RoomVehicleEntry<br/>RoomBikeEntry · RoomPersona<br/>RoomControlPoint"]
         PDF["report/<br/>PdfReportWriter (Dispatchers.IO)<br/>ReportStore (files/reports)"]
         SEC["local/security/ & session/<br/>AdminPinManager · EncryptedKeyValueStore<br/>SessionManager"]
         REPO --> ROOM
@@ -132,6 +133,14 @@ classDiagram
         +insertIfAbsent(persona: Persona)
         +upsertAll(personas: List~Persona~)
     }
+    class ControlPointRepository {
+        <<interface>>
+        +observeAll() Flow~List~ControlPoint~~
+        +getAll() List~ControlPoint~
+        +get(id: String) ControlPoint?
+        +insert(point: ControlPoint)
+        +update(point: ControlPoint)
+    }
     class ReportExporter {
         <<interface>>
         +export(document: ReportDocument) File
@@ -142,24 +151,33 @@ classDiagram
     VehicleEntryRepository <|.. RoomVehicleEntryRepository
     BikeEntryRepository <|.. RoomBikeEntryRepository
     PersonaRepository <|.. RoomPersonaRepository
+    ControlPointRepository <|.. RoomControlPointRepository
     ReportExporter <|.. PdfReportWriter
 ```
 
 ---
 
-## 4. Modelo de datos (Room v18)
+## 4. Modelo de datos (Room v20)
 
-`turnos` es la raíz de agregación. Los instantes se almacenan en **epoch millis** (`iniciadoAt`, `finalizadoAt`, `entradaAt`, `salidaAt`, `personas` es independiente de `turnos`.
+`turnos` es la raíz de agregación. Los instantes se almacenan en **epoch millis** (`iniciadoAt`, `finalizadoAt`, `entradaAt`, `salidaAt`). `personas` es independiente de `turnos`, y `turnos.controlPoint` referencia a `puntos_control` sin FK (un punto nunca se borra).
 
 ```mermaid
 erDiagram
     TURNOS ||--o{ REGISTROS_INGRESO : "shiftId (CASCADE)"
     TURNOS ||--o{ REGISTROS_BICICLETA : "shiftId (CASCADE)"
+    PUNTOS_CONTROL ||--o{ TURNOS : "id (referencia lógica)"
 
+    PUNTOS_CONTROL {
+        string id PK "inmutable, nunca se reutiliza"
+        string nombre "editable"
+        string tipo "PORTERIA | BICICLETERO"
+        int orden "orden y color"
+        boolean activo
+    }
     TURNOS {
         long id PK
         string guardia
-        string controlPoint "porteria_2..bicicletero_2 (Portería 1 = porteria_2)"
+        string controlPoint "id de PUNTOS_CONTROL"
         string tipo "DAY | NIGHT"
         string fecha "yyyy-MM-dd"
         long iniciadoAt
@@ -319,6 +337,7 @@ flowchart LR
     DM["DatabaseManagerActivity"]
     AD["AdminDirectoryActivity"]
     S["SettingsActivity"]
+    CP["ControlPointsActivity"]
 
     L -->|"Turno vehicular"| P
     L -->|"Turno bicicletero"| B
@@ -332,6 +351,7 @@ flowchart LR
     A --> SR
     A --> DM
     A --> S
+    A --> CP
     DM --> AD
 ```
 
@@ -344,12 +364,12 @@ sequenceDiagram
     participant App as App.onCreate()
     participant Koin as Koin (appModules)
     participant Seed as DatabaseSeeder
-    participant DB as AppDatabase (Room v19)
+    participant DB as AppDatabase (Room v20)
 
     App->>Koin: startKoin(appModules)
     App->>Seed: launch(Dispatchers.IO) { seedIfNeeded() }
     Seed->>DB: personaDao().count()
-    Note over DB: Al abrir SQLite por 1.ª vez:<br/>si v17/v18 -> migraciones hasta v19;<br/>si nueva -> onDatabaseCreated()
+    Note over DB: Al abrir SQLite por 1.ª vez:<br/>si es anterior -> migraciones hasta v20;<br/>si es nueva -> crea tablas, puntos de fábrica<br/>y llama a onDatabaseCreated()
     alt Instalación nueva y personas == 0
         Seed->>DB: personaDao().upsertAll(res/raw/seed_personas.json)
     end
