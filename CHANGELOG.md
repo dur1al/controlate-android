@@ -3,7 +3,7 @@
 Todos los cambios relevantes de este proyecto se documentan en este archivo.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa [Versionado Semántico](https://semver.org/lang/es/).
 
-## [1.1.0] - Sin publicar
+## [1.1.0] - 2026-11-13
 
 ### Added
 - Turnos como entidad propia: cada registro pertenece a un turno y el turno abierto se recupera al reabrir la app.
@@ -59,3 +59,6 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ### Security
 - Dataset inicial 100 % sintético, respaldo automático deshabilitado y minificación en release.
+
+[1.1.0]: https://github.com/dur1al/controlate-android/compare/v1.0.0...v1.1.0
+[1.0.0]: https://github.com/dur1al/controlate-android/releases/tag/v1.0.0
